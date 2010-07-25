@@ -504,22 +504,27 @@ class XSectionGenerator
 
   def layer(layer_spec)
     ld = LayoutData.new([], self)
-    ld.load(@layout, @cell, @line_dbu.bbox, layer_spec)
+    ld.load(@layout, @cell, @line_dbu.bbox.enlarge(RBA::Point.new(@extend, @extend)), layer_spec)
     return ld
   end
 
   def output(layer_spec, layer_data)
+
     raise("'output' method: second parameter must be a geometry object") unless layer_data.kind_of?(LayoutData)
+
     ls = string_to_layerinfo(layer_spec)
     li = @target_layout.insert_layer(ls)
     shapes = @target_layout.cell(@target_cell).shapes(li)
-    layer_data.data.each do |d|
-      shapes.insert(d)
+
+    # confine the shapes to the region of interest
+    @ep.boolean_to_polygon([ RBA::Polygon.new(@roi) ], layer_data.data, RBA::EdgeProcessor::mode_and, true, true).each do |polygon|
+      shapes.insert(polygon)
     end
+
   end
 
   def all
-    return xpoints_to_mask([[ 0, 1 ], [ @line_dbu.length, -1 ]])
+    return xpoints_to_mask([[ -@extend, 1 ], [ @line_dbu.length + @extend, -1 ]])
   end
 
   def diffuse(*args)
@@ -552,12 +557,12 @@ class XSectionGenerator
           # confine the point to the length of the line
           z = (edge_dbu.dx.to_f * (edge_dbu.p1.y.to_f - @line_dbu.p1.y.to_f) - edge_dbu.dy.to_f * (edge_dbu.p1.x.to_f - @line_dbu.p1.x.to_f)) /
               (edge_dbu.dx.to_f * (@line_dbu.p2.y.to_f - @line_dbu.p1.y.to_f) - edge_dbu.dy.to_f * (@line_dbu.p2.x.to_f - @line_dbu.p1.x.to_f))
-          if z < 0.0
-            z = 0.0
-          elsif z > 1.0
-            z = 1.0
-          end
           z = (z * @line_dbu.length + 0.5).floor
+          if z < -@extend
+            z = -@extend
+          elsif z > @line_dbu.length + @extend
+            z = @line_dbu.length + @extend
+          end
 
           s = ((edge_dbu.dy * @line_dbu.dx - edge_dbu.dx * @line_dbu.dy) <=> 0)
 
@@ -704,9 +709,9 @@ class XSectionGenerator
         to -= less
       end
       into.each do |i|
-        i.maskp([RBA::Polygon.new(RBA::Box.new(0, -self.depth_dbu, self.width_dbu, to))])
+        i.maskp([RBA::Polygon.new(RBA::Box.new(-@extend, -self.depth_dbu, @line_dbu.length + @extend, to))])
       end
-      air.addp([RBA::Polygon.new(RBA::Box.new(0, to, self.width_dbu, self.height_dbu))])
+      air.addp([RBA::Polygon.new(RBA::Box.new(-@extend, to, @line_dbu.length + @extend, self.height_dbu))])
     end
 
   end
@@ -754,6 +759,7 @@ class XSectionGenerator
 
   def height(x)
     @height = (x / @dbu + 0.5).floor.to_i
+    update_basic_regions
   end
 
   def height_dbu
@@ -762,10 +768,20 @@ class XSectionGenerator
 
   def depth(x)
     @depth = (x / @dbu + 0.5).floor.to_i
+    update_basic_regions
   end
 
   def depth_dbu
     @depth
+  end
+
+  def extend(x)
+    @extend = (x / @dbu + 0.5).floor.to_i
+    update_basic_regions
+  end
+
+  def extend_dbu
+    @extend
   end
 
   def width_dbu
@@ -773,10 +789,10 @@ class XSectionGenerator
   end
 
   def background
-    x1 = @line_dbu.p1.x
-    y1 = @line_dbu.p1.y
-    x2 = @line_dbu.p2.x
-    y2 = @line_dbu.p2.y
+    x1 = @line_dbu.p1.x - @extend
+    y1 = @line_dbu.p1.y - @extend
+    x2 = @line_dbu.p2.x + @extend
+    y2 = @line_dbu.p2.y + @extend
     if x2 < x1
       (x1, x2) = [x2, x1]
     end
@@ -805,9 +821,7 @@ class XSectionGenerator
       return
     end
 
-    @area = RBA::Box.new(0, -@depth, @line_dbu.length, @height)
-    @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(0, 0, @line_dbu.length, @height))], self, 0)
-    @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(0, -@depth, @line_dbu.length, 0))], self, 0)
+    update_basic_regions
 
     text = nil
     File.open(@file_path) do |file|
@@ -832,6 +846,13 @@ class XSectionGenerator
   end
 
 private
+
+  def update_basic_regions
+    @area = RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, @height)
+    @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, 0, @line_dbu.length + @extend, @height))], self, 0)
+    @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, 0))], self, 0)
+    @roi = RBA::Box.new(0, -@depth, @line_dbu.length, @height)
+  end
 
   def setup
 
@@ -887,9 +908,10 @@ private
     @target_cell = cell
 
     # initialize height and depth
-    height(2.0)
-    depth(2.0)
-    delta(10*dbu)
+    @extend = (2.0 / @dbu + 0.5).floor.to_i
+    @delta = 10
+    @height = (2.0 / @dbu + 0.5).floor.to_i
+    @depth = (2.0 / @dbu + 0.5).floor.to_i
 
     return true
 
