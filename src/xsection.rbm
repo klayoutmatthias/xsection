@@ -119,7 +119,7 @@ class LayoutData
   end
 
   def or(other)
-    raise "'and': argument is not a layer" unless other.kind_of?(LayoutData)
+    raise "'or': argument is not a layer" unless other.kind_of?(LayoutData)
     LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_or, true, true), @xs)
   end
 
@@ -173,7 +173,7 @@ class LayoutData
   end
 
   def mask(other)
-    raise "'and': argument is not a layer" unless other.kind_of?(LayoutData)
+    raise "'mask': argument is not a layer" unless other.kind_of?(LayoutData)
     @polygons = @ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_and, true, true)
   end
 
@@ -789,16 +789,20 @@ class XSectionGenerator
   end
 
   def background
-    x1 = @line_dbu.p1.x - @extend
-    y1 = @line_dbu.p1.y - @extend
-    x2 = @line_dbu.p2.x + @extend
-    y2 = @line_dbu.p2.y + @extend
+    x1 = @line_dbu.p1.x
+    y1 = @line_dbu.p1.y
+    x2 = @line_dbu.p2.x
+    y2 = @line_dbu.p2.y
     if x2 < x1
       (x1, x2) = [x2, x1]
     end
     if y2 < y1
       (y1, y2) = [y2, y1]
     end
+    x1 -= @extend
+    y1 -= @extend
+    x2 += @extend
+    y2 += @extend
     RBA::Box.new(RBA::Point.new(x1 - @delta * 5, y1 - @delta * 5), RBA::Point.new(x2 + @delta * 5, y2 + @delta * 5))
   end
 
