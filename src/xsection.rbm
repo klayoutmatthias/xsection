@@ -1,5 +1,4 @@
-# HvZ: Just testing SVN
-# A feasibility study for a cross section generation using 
+# A feasibility study for a cross section generation using
 # boolean operations. See "cmos.xs" for a brief description of the
 # commands available and some examples.
 
@@ -10,11 +9,11 @@ $file_path = "cmos.xs"
 
 # TODO: use a much smaller dbu for the simulation to have a really small delta
 # the paths used for generating the masks are somewhat too thick
-# TODO: the left and right areas are not treated correctly 
+# TODO: the left and right areas are not treated correctly
 
 # Problems: empty polyon arrays produce errors with boolean_to_polygon because
-# RBA does not recognize the empty array as an array of polygons and then there is 
-# an ambiguity between the edge-input and polygon input variants 
+# RBA does not recognize the empty array as an array of polygons and then there is
+# an ambiguity between the edge-input and polygon input variants
 # Thus this extension which checks for empty input and performs some default operation:
 class RBA::EdgeProcessor
   def safe_boolean_to_polygon(pa, pb, mode, rh, mc)
@@ -49,11 +48,11 @@ def string_to_layerinfo(layer_spec)
   # convert the layer specification into a LayerInfo structure
   # format: "l", "l/d", "n(l/d)" or "n".
   ls = nil
-  if (layer_spec =~ /^(\d+)$/) 
+  if (layer_spec =~ /^(\d+)$/)
     ls = RBA::LayerInfo.new($1.to_i, 0)
-  elsif (layer_spec =~ /^(\d+)\/(\d+)$/) 
+  elsif (layer_spec =~ /^(\d+)\/(\d+)$/)
     ls = RBA::LayerInfo.new($1.to_i, $2.to_i)
-  elsif (layer_spec =~ /^(.*)\s*\((\d+)\/(\d+)\)$/) 
+  elsif (layer_spec =~ /^(.*)\s*\((\d+)\/(\d+)\)$/)
     ls = RBA::LayerInfo.new($2.to_i, $3.to_i, $1)
   else
     ls = RBA::LayerInfo.new(layer_spec)
@@ -64,10 +63,10 @@ def string_to_layerinfo(layer_spec)
 end
 
 class LayoutData
-  
+
   def initialize(polygons, xs)
     @polygons = polygons
-    @ep = RBA::EdgeProcessor.new 
+    @ep = RBA::EdgeProcessor.new
     @xs = xs
   end
 
@@ -90,7 +89,7 @@ class LayoutData
       while !shape_iter.at_end
 
         shape = shape_iter.shape
-        if shape.is_polygon? || shape.is_path? || shape.is_box? 
+        if shape.is_polygon? || shape.is_path? || shape.is_box?
           @polygons.push(shape.polygon.transformed_cplx(shape_iter.itrans))
         end
 
@@ -204,8 +203,8 @@ class LayoutData
 end
 
 class MaterialData < LayoutData
-  
-  # 'delta' is the intrinsic height (required for mask data because there cannot be 
+
+  # 'delta' is the intrinsic height (required for mask data because there cannot be
   # an infinitly small mask layer (in database units)
   def initialize(polygons, xs, delta)
     super(polygons, xs)
@@ -287,7 +286,7 @@ class MaterialData < LayoutData
               into = v
             end
             into.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@ 
+              if !i.kind_of?(LayoutData) # should be MaterialData @@@
                 raise "'#{method}' method: 'into' expects a material parameter or an array of such"
               end
             end
@@ -298,7 +297,7 @@ class MaterialData < LayoutData
               on = v
             end
             on.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@ 
+              if !i.kind_of?(LayoutData) # should be MaterialData @@@
                 raise "'#{method}' method: 'on' expects a material parameter or an array of such"
               end
             end
@@ -309,7 +308,7 @@ class MaterialData < LayoutData
               through = v
             end
             through.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@ 
+              if !i.kind_of?(LayoutData) # should be MaterialData @@@
                 raise "'#{method}' method: 'through' expects a material parameter or an array of such"
               end
             end
@@ -339,7 +338,7 @@ class MaterialData < LayoutData
       raise "Too few arguments for '#{method}' method"
     end
 
-    if on && (through || into) 
+    if on && (through || into)
       raise "'on' option cannot be combined with 'into' or 'through' option"
     end
 
@@ -355,7 +354,7 @@ class MaterialData < LayoutData
       prebias += xy
     end
 
-    if taper 
+    if taper
       prebias += z * Math.tan(Math::PI / 180.0 * taper) - xy
       xy += prebias
     end
@@ -413,13 +412,13 @@ class MaterialData < LayoutData
 
     offset = @delta
     d = @polygons
-    
+
     # in the "into" case determine the interface region between self and into
     if into || through || on
       # apply an artificial sizing to create an overlap before
       if offset == 0
         offset = @xs.delta_dbu / 2
-        d = @ep.size_to_polygon(d, 0, offset, 2, true, true) 
+        d = @ep.size_to_polygon(d, 0, offset, 2, true, true)
       end
       if on
         d = @ep.safe_boolean_to_polygon(d, on_data, RBA::EdgeProcessor::mode_and, true, true)
@@ -446,21 +445,21 @@ class MaterialData < LayoutData
       d = dd
     end
 
-    xyi = (xy / @xs.dbu + 0.5).floor.to_i 
+    xyi = (xy / @xs.dbu + 0.5).floor.to_i
     zi = (z / @xs.dbu + 0.5).floor.to_i - offset
 
-    if taper 
+    if taper
       d = @ep.size_to_polygon(d, xyi, zi, 0, true, true)
     elsif xyi <= 0
       d = @ep.size_to_polygon(d, 0, zi, 2, true, true)
-    elsif mode == :round 
+    elsif mode == :round
       # emulate "rounding" of corners by performing soft-edged sizes
       d = @ep.size_to_polygon(d, xyi / 3, zi / 3, 1, true, true)
       d = @ep.size_to_polygon(d, xyi / 3, zi / 3, 0, true, true)
       d = @ep.size_to_polygon(d, xyi - 2 * (xyi / 3), zi - 2 * (zi / 3), 0, true, true)
-    elsif mode == :square 
+    elsif mode == :square
       d = @ep.size_to_polygon(d, xyi, zi, 2, true, true)
-    elsif mode == :octagon 
+    elsif mode == :octagon
       d = @ep.size_to_polygon(d, xyi, zi, 1, true, true)
     end
 
@@ -472,7 +471,7 @@ class MaterialData < LayoutData
 
     if nil
       # remove small features
-      # Hint: this is done separately in x and y direction since that is more robust against 
+      # Hint: this is done separately in x and y direction since that is more robust against
       # snapping distortions
       d = @ep.size_to_polygon(d, 0, @xs.delta_dbu  / 2, 2, true, true)
       d = @ep.size_to_polygon(d, 0, -@xs.delta_dbu, 2, true, true)
@@ -498,6 +497,7 @@ class XSectionGenerator
 
     # TODO: adjust this path:
     @file_path = $file_path
+    @lyp_file = nil
     @ep = RBA::EdgeProcessor.new
 
   end
@@ -545,7 +545,7 @@ class XSectionGenerator
 
   def mask(layer_data)
 
-    crossing_points = [] 
+    crossing_points = []
 
     layer_data.data.each do |polygon|
 
@@ -601,10 +601,10 @@ class XSectionGenerator
       compressed_crossing_points.push([ last_z, sum_s ])
     end
 
-    # create the final intervals by selecting those crossing points which 
-    # denote an entry or leave point into or out of drawn geometry. This 
+    # create the final intervals by selecting those crossing points which
+    # denote an entry or leave point into or out of drawn geometry. This
     # basically does a merge of all drawn shapes.
-    
+
     return xpoints_to_mask(compressed_crossing_points)
 
   end
@@ -626,7 +626,7 @@ class XSectionGenerator
               downto = v
             end
             downto.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@ 
+              if !i.kind_of?(LayoutData) # should be MaterialData @@@
                 raise "'#{method}' method: 'into' expects a material parameter or an array of such"
               end
             end
@@ -637,7 +637,7 @@ class XSectionGenerator
               into = v
             end
             into.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@ 
+              if !i.kind_of?(LayoutData) # should be MaterialData @@@
                 raise "'#{method}' method: 'into' expects a material parameter or an array of such"
               end
             end
@@ -685,7 +685,7 @@ class XSectionGenerator
         end
       end
 
-    elsif into 
+    elsif into
 
       # determine upper bound of our material
       into.each do |i|
@@ -705,7 +705,7 @@ class XSectionGenerator
     end
 
     if to
-      if less 
+      if less
         to -= less
       end
       into.each do |i|
@@ -723,7 +723,7 @@ class XSectionGenerator
     p1 = 0
     p2 = 0
 
-    mask_polygons = [] 
+    mask_polygons = []
     iv.each do |i|
 
       z = i[0]
@@ -818,6 +818,10 @@ class XSectionGenerator
     @dbu
   end
 
+  def layers_file(lyp_file)
+    @lyp_file = lyp_file
+  end
+
   # The basic generation method
   def run
 
@@ -845,6 +849,9 @@ class XSectionGenerator
     end
 
     RBA::Application.instance.main_window.cm_lv_add_missing #@@@
+    if @lyp_file
+      @target_view.load_layer_props(@lyp_file)
+    end
     @target_view.zoom_fit
 
   end
@@ -870,7 +877,7 @@ private
 
     ruler = nil
     nrulers = 0
-    view.each_annotation do |a| 
+    view.each_annotation do |a|
       # Use only rulers with "plain line" style
       # @@@ if a.style == RBA::Annotation::style_line
         ruler = a
@@ -882,7 +889,7 @@ private
       RBA::MessageBox::critical("Error", "No ruler present for the cross section line", RBA::MessageBox::b_ok)
       return
     end
-    if nrulers > 1 
+    if nrulers > 1
       RBA::MessageBox::critical("Error", "More than one ruler present for the cross section line (with 'plain line' style)", RBA::MessageBox::b_ok)
       return false
     end
@@ -925,13 +932,13 @@ end
 
 # A helper class for a menu bound action
 class MenuAction < RBA::Action
-  def initialize( title, shortcut, &action ) 
+  def initialize( title, shortcut, &action )
     self.title = title
     self.shortcut = shortcut
     @action = action
   end
-  def triggered 
-    @action.call( self ) 
+  def triggered
+    @action.call( self )
   end
 private
   @action
