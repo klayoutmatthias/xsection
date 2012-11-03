@@ -14,11 +14,6 @@
 # boolean operations. See "cmos.xs" for a brief description of the
 # commands available and some examples.
 
-# The technology description
-# TODO: this should not be a fixed path
-$file_path = "cmos.xs"
-
-
 # TODO: use a much smaller dbu for the simulation to have a really small delta
 # the paths used for generating the masks are somewhat too thick
 # TODO: the left and right areas are not treated correctly
@@ -117,6 +112,10 @@ class LayoutData
     @polygons
   end
 
+  def data=(polygons)
+    @polygons = polygons
+  end
+
   def sized(*args)
     if args.length == 1
       LayoutData.new(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, 2, true, true), @xs)
@@ -190,6 +189,10 @@ class LayoutData
 
   def maskp(other)
     @polygons = @ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_and, true, true)
+  end
+
+  def transform(t)
+    @polygons = @polygons.collect { |p| p.transformed(t) }
   end
 
   def close_gaps
@@ -497,8 +500,6 @@ class MaterialData < LayoutData
 
   end
 
-
-
 end
 
 # The main class that creates a cross-section file
@@ -533,6 +534,10 @@ class XSectionGenerator
       shapes.insert(polygon)
     end
 
+  end
+
+  def flip
+    @air, @air_below = @air_below, @air
   end
 
   def all
@@ -787,6 +792,15 @@ class XSectionGenerator
     @depth
   end
 
+  def below(x)
+    @below = (x / @dbu + 0.5).floor.to_i
+    update_basic_regions
+  end
+
+  def below_dbu
+    @below
+  end
+
   def extend(x)
     @extend = (x / @dbu + 0.5).floor.to_i
     update_basic_regions
@@ -871,10 +885,11 @@ class XSectionGenerator
 private
 
   def update_basic_regions
-    @area = RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, @height)
+    @area = RBA::Box.new(-@extend, -@depth - @below, @line_dbu.length + @extend, @height)
     @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, 0, @line_dbu.length + @extend, @height))], self, 0)
+    @air_below = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth - @below, @line_dbu.length + @extend, -@depth))], self, 0)
     @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, 0))], self, 0)
-    @roi = RBA::Box.new(0, -@depth, @line_dbu.length, @height)
+    @roi = RBA::Box.new(0, -@depth - @below, @line_dbu.length, @height)
   end
 
   def setup
@@ -935,6 +950,7 @@ private
     @delta = 10
     @height = (2.0 / @dbu + 0.5).floor.to_i
     @depth = (2.0 / @dbu + 0.5).floor.to_i
+    @below = (2.0 / @dbu + 0.5).floor.to_i
 
     return true
 
@@ -983,8 +999,8 @@ class XSectiongScriptEnvironment
     mw = app.main_window
 
     @action = RBA::Action.new
-	@action.title = "XSection Script"
-	@action.on_triggered do
+    @action.title = "XSection Script"
+    @action.on_triggered do
 
       view = RBA::Application.instance.main_window.current_view
       if !view
@@ -1055,8 +1071,7 @@ class XSectiongScriptEnvironment
     begin
       XSectionGenerator.new(fn).run
     rescue
-      lp.release
-      RBA::MessageBox.critical("Script failed", $!, RBA::MessageBox.b_ok)
+      RBA::MessageBox.critical("Script failed", $!.to_s, RBA::MessageBox.b_ok)
     end
 
   end
