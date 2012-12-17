@@ -750,7 +750,7 @@ class XSectionGenerator
         p1 = z
       elsif s <= 0 && last_s > 0
         p2 = z
-        mask_polygons.push(RBA::Polygon.new(RBA::Box.new(p1, -@depth, p2, @height)))
+        mask_polygons.push(RBA::Polygon.new(RBA::Box.new(p1, -@depth - @below, p2, @height)))
       end
 
       last_s = s
