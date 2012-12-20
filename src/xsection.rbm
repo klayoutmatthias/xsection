@@ -512,6 +512,7 @@ class XSectionGenerator
     @file_path = file_path
     @lyp_file = nil
     @ep = RBA::EdgeProcessor.new
+    @flipped = false
 
   end
 
@@ -538,6 +539,7 @@ class XSectionGenerator
 
   def flip
     @air, @air_below = @air_below, @air
+    @flipped = !@flipped
   end
 
   def all
@@ -694,11 +696,10 @@ class XSectionGenerator
         yt = p.bbox.top
         yb = p.bbox.bottom
         to ||= yt
-        if yt > to
-          to = yt
-        end
-        if yb > to
-          to = yb
+        if !@flipped
+          to = [ to, yt, yb ].max
+        else
+          to = [ to, yt, yb ].min
         end
       end
 
@@ -710,11 +711,10 @@ class XSectionGenerator
           yt = p.bbox.top
           yb = p.bbox.bottom
           to ||= yt
-          if yt > to
-            to = yt
-          end
-          if yb > to
-            to = yb
+          if !@flipped
+            to = [ to, yt, yb ].max
+          else
+            to = [ to, yt, yb ].min
           end
         end
       end
@@ -722,13 +722,18 @@ class XSectionGenerator
     end
 
     if to
-      if less
-        to -= less
+      less ||= 0
+      if @flipped
+        into.each do |i|
+          i.maskp([RBA::Polygon.new(RBA::Box.new(-@extend, to + less, @line_dbu.length + @extend, self.height_dbu))])
+        end
+        air.addp([RBA::Polygon.new(RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line_dbu.length + @extend, to + less))])
+      else
+        into.each do |i|
+          i.maskp([RBA::Polygon.new(RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line_dbu.length + @extend, to - less))])
+        end
+        air.addp([RBA::Polygon.new(RBA::Box.new(-@extend, to - less, @line_dbu.length + @extend, self.height_dbu))])
       end
-      into.each do |i|
-        i.maskp([RBA::Polygon.new(RBA::Box.new(-@extend, -self.depth_dbu, @line_dbu.length + @extend, to))])
-      end
-      air.addp([RBA::Polygon.new(RBA::Box.new(-@extend, to, @line_dbu.length + @extend, self.height_dbu))])
     end
 
   end
