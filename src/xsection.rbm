@@ -677,11 +677,10 @@ class XSectionGenerator
 
     if downto
 
-      downto_data
+      downto_data = nil
       if downto.length == 1
         downto_data = downto[0].data
       else
-        downto_data = []
         downto.each do |i|
           if downto_data.length == 0
             downto_data = i.data
@@ -692,18 +691,20 @@ class XSectionGenerator
       end
 
       # determine upper bound of material
-      downto_data.each do |p|
-        yt = p.bbox.top
-        yb = p.bbox.bottom
-        to ||= yt
-        if !@flipped
-          to = [ to, yt, yb ].max
-        else
-          to = [ to, yt, yb ].min
+      if downto_data
+          downto_data.each do |p|
+          yt = p.bbox.top
+          yb = p.bbox.bottom
+          to ||= yt
+          if !@flipped
+            to = [ to, yt, yb ].max
+          else
+            to = [ to, yt, yb ].min
+          end
         end
       end
 
-    elsif into
+    elsif into && !to
 
       # determine upper bound of our material
       into.each do |i|
