@@ -949,6 +949,7 @@ private
     @target_view = app.main_window.current_view
     @target_view.select_cell(cell, 0)
     @target_layout = cv.layout
+    @target_layout.dbu = @dbu
     @target_cell = cell
 
     # initialize height and depth
