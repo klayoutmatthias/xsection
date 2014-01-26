@@ -764,7 +764,7 @@ class XSectionGenerator
     end
 
     air = @air.data
-    air_sized = @ep.size_to_polygon(air, @delta, @delta, true, true)
+    air_sized = @ep.size_to_polygon(air, @delta, @delta, 2, true, true)
     air_border = @ep.safe_boolean_to_polygon(air_sized, air, RBA::EdgeProcessor::mode_anotb, true, true)
     mask_data = @ep.safe_boolean_to_polygon(air_border, mask_polygons, RBA::EdgeProcessor::mode_and, true, true)
 
