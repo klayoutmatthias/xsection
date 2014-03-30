@@ -14,8 +14,6 @@
 # boolean operations. See "cmos.xs" for a brief description of the
 # commands available and some examples.
 
-# TODO: use a much smaller dbu for the simulation to have a really small delta
-# the paths used for generating the masks are somewhat too thick
 # TODO: the left and right areas are not treated correctly
 
 # Problems: empty polyon arrays produce errors with boolean_to_polygon because
@@ -121,7 +119,23 @@ class LayoutData
       LayoutData.new(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, 2, true, true), @xs)
     elsif args.length == 2
       LayoutData.new(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, (args[1] / @xs.dbu + 0.5).floor.to_i, 2, true, true), @xs)
+    else
+      raise("sized method expects on or two arguments")
     end
+  end
+
+  def size(*args)
+    if args.length == 1
+      @polygons = @ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, 2, true, true)
+    elsif args.length == 2
+      @polygons = @ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, (args[1] / @xs.dbu + 0.5).floor.to_i, 2, true, true)
+    else
+      raise("size method expects on or two arguments")
+    end
+  end
+
+  def invert
+    @polygons = @ep.safe_boolean_to_polygon(@polygons, [RBA::Polygon.new(@xs.background)], RBA::EdgeProcessor::mode_xor, true, true)
   end
 
   def inverted
@@ -195,35 +209,14 @@ class LayoutData
     @polygons = @polygons.collect { |p| p.transformed(t) }
   end
 
-  def close_gaps
-    sz = 1
-    d = @polygons
-    d = @ep.size_to_polygon(d, 0, sz, 2, true, true)
-    d = @ep.size_to_polygon(d, 0, -sz, 2, true, true)
-    d = @ep.size_to_polygon(d, sz, 0, 2, true, true)
-    d = @ep.size_to_polygon(d, -sz, 0, 2, true, true)
-    @polygons = d
-  end
-
-  def remove_slivers
-    sz = 1
-    d = @polygons
-    d = @ep.size_to_polygon(d, 0, -sz, 2, true, true)
-    d = @ep.size_to_polygon(d, 0, sz, 2, true, true)
-    d = @ep.size_to_polygon(d, -sz, 0, 2, true, true)
-    d = @ep.size_to_polygon(d, sz, 0, 2, true, true)
-    @polygons = d
-  end
-
 end
 
-class MaterialData < LayoutData
+class MaskData < LayoutData
 
-  # 'delta' is the intrinsic height (required for mask data because there cannot be
-  # an infinitly small mask layer (in database units)
-  def initialize(polygons, xs, delta)
-    super(polygons, xs)
-    @delta = delta
+  def initialize(air_polygons, mask_polygons, xs)
+    super([], xs)
+    @air_polygons = air_polygons
+    @mask_polygons = mask_polygons
   end
 
   def grow(*args)
@@ -235,17 +228,15 @@ class MaterialData < LayoutData
     d = produce_geom(xy, z, into, through, on, taper, bias, mode, :grow)
 
     # prepare the result
-    res = MaterialData.new(d, @xs, 0)
+    res = MaterialData.new(d, @xs)
 
     # consume material
     if into
       into.each do |i|
         i.sub(res)
-        i.remove_slivers
       end
     else
       @xs.air.sub(res)
-      @xs.air.remove_slivers
     end
 
     return res
@@ -265,18 +256,16 @@ class MaterialData < LayoutData
     d = produce_geom(xy, z, into, through, on, taper, bias, mode, :etch)
 
     # produce the geometry of the etched material
-    res = MaterialData.new(d, @xs, 0)
+    res = MaterialData.new(d, @xs)
 
     # consume material and add to air
     if into
       into.each do |i|
         i.sub(res)
-        i.remove_slivers
       end
     end
 
     @xs.air.add(res)
-    @xs.air.close_gaps
 
   end
 
@@ -301,7 +290,7 @@ class MaterialData < LayoutData
               into = v
             end
             into.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@
+              if !i.kind_of?(MaterialData) 
                 raise "'#{method}' method: 'into' expects a material parameter or an array of such"
               end
             end
@@ -312,7 +301,7 @@ class MaterialData < LayoutData
               on = v
             end
             on.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@
+              if !i.kind_of?(MaterialData) 
                 raise "'#{method}' method: 'on' expects a material parameter or an array of such"
               end
             end
@@ -323,7 +312,7 @@ class MaterialData < LayoutData
               through = v
             end
             through.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@
+              if !i.kind_of?(MaterialData) 
                 raise "'#{method}' method: 'through' expects a material parameter or an array of such"
               end
             end
@@ -425,79 +414,96 @@ class MaterialData < LayoutData
       end
     end
 
-    offset = @delta
-    d = @polygons
+    pi = (prebias / @xs.dbu + 0.5).floor.to_i
+    mp = @ep.size_to_polygon(@mask_polygons, -pi, 0, 2, true, true)
+    air_masked = @ep.safe_boolean_to_polygon(@air_polygons, mp, RBA::EdgeProcessor::mode_and, true, true)
+    me = RBA::Edges::new(air_masked) - RBA::Edges::new(mp)
 
     # in the "into" case determine the interface region between self and into
     if into || through || on
-      # apply an artificial sizing to create an overlap before
-      if offset == 0
-        offset = @xs.delta_dbu / 2
-        d = @ep.size_to_polygon(d, 0, offset, 2, true, true)
-      end
       if on
-        d = @ep.safe_boolean_to_polygon(d, on_data, RBA::EdgeProcessor::mode_and, true, true)
+        me &= RBA::Edges::new(on_data)
       elsif through
-        d = @ep.safe_boolean_to_polygon(d, through_data, RBA::EdgeProcessor::mode_and, true, true)
+        me &= RBA::Edges::new(through_data)
       else
-        d = @ep.safe_boolean_to_polygon(d, into_data, RBA::EdgeProcessor::mode_and, true, true)
+        me &= RBA::Edges::new(into_data)
       end
-    end
-
-    pi = (prebias / @xs.dbu + 0.5).floor.to_i
-    if pi < 0
-      d = @ep.size_to_polygon(d, -pi, 0, 2, true, true)
-    elsif pi > 0
-      # apply a positive prebias by filtering with a sized box
-      dd = []
-      d.each do |p|
-        box = p.bbox
-        if box.width > 2 * pi
-          box = RBA::Box.new(box.left + pi, box.bottom, box.right - pi, box.top)
-          @ep.boolean_to_polygon([ RBA::Polygon.new(box) ], [p], RBA::EdgeProcessor::mode_and, true, true).each { |pp| dd.push(pp) }
-        end
-      end
-      d = dd
     end
 
     xyi = (xy / @xs.dbu + 0.5).floor.to_i
-    zi = (z / @xs.dbu + 0.5).floor.to_i - offset
+    zi = (z / @xs.dbu + 0.5).floor.to_i
 
-    if taper
-      d = @ep.size_to_polygon(d, xyi, zi, 0, true, true)
+    d = RBA::Region::new
+
+    if taper && xyi > 0
+
+      kernel_pts = []
+      kernel_pts << RBA::Point::new(-xyi, 0)
+      kernel_pts << RBA::Point::new(0, zi)
+      kernel_pts << RBA::Point::new(xyi, 0)
+      kernel_pts << RBA::Point::new(0, -zi)
+
+      kp = RBA::Polygon::new(kernel_pts)
+      me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
+      d.merge
+
     elsif xyi <= 0
-      d = @ep.size_to_polygon(d, 0, zi, 2, true, true)
-    elsif mode == :round
-      # emulate "rounding" of corners by performing soft-edged sizes
-      d = @ep.size_to_polygon(d, xyi / 3, zi / 3, 1, true, true)
-      d = @ep.size_to_polygon(d, xyi / 3, zi / 3, 0, true, true)
-      d = @ep.size_to_polygon(d, xyi - 2 * (xyi / 3), zi - 2 * (zi / 3), 0, true, true)
+
+      # TODO: there is no way to do that with a Minkowsky sum currently
+      # since polygons cannot be lines except through dirty tricks
+      dz = RBA::Point::new(0, zi)
+      me.each { |e| d.insert(RBA::Polygon::new([ e.p1 - dz, e.p2 - dz, e.p2 + dz, e.p1 + dz ])) }
+      d.merge
+
+    elsif mode == :round || mode == :octagon
+
+      # approximate round corners by 64 points for "round" and 8 for "octagon"
+      n = (mode == :round ? 64 : 8)
+      da = 2.0 * Math::PI / n
+      rf = 1.0 / Math::cos(da * 0.5)
+      kernel_pts = []
+      n.times do |i|
+        kernel_pts << RBA::Point::from_dpoint(RBA::DPoint::new(xyi * rf * Math::cos(da * (i + 0.5)), zi * rf * Math::sin(da * (i + 0.5))))
+      end
+
+      kp = RBA::Polygon::new(kernel_pts)
+      me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
+      d.merge
+
     elsif mode == :square
-      d = @ep.size_to_polygon(d, xyi, zi, 2, true, true)
-    elsif mode == :octagon
-      d = @ep.size_to_polygon(d, xyi, zi, 1, true, true)
+
+      kernel_pts = []
+      kernel_pts << RBA::Point::new(-xyi, -zi)
+      kernel_pts << RBA::Point::new(-xyi, zi)
+      kernel_pts << RBA::Point::new(xyi, zi)
+      kernel_pts << RBA::Point::new(xyi, -zi)
+
+      kp = RBA::Polygon::new(kernel_pts)
+      me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
+      d.merge
+
     end
 
     if through
-      d = @ep.safe_boolean_to_polygon(d, through_data, RBA::EdgeProcessor::mode_anotb, true, true)
+      d -= RBA::Region::new(through_data)
     end
 
-    d = @ep.safe_boolean_to_polygon(d, into_data, RBA::EdgeProcessor::mode_and, true, true)
+    d &= RBA::Region::new(into_data)
 
-    if nil
-      # remove small features
-      # Hint: this is done separately in x and y direction since that is more robust against
-      # snapping distortions
-      d = @ep.size_to_polygon(d, 0, @xs.delta_dbu  / 2, 2, true, true)
-      d = @ep.size_to_polygon(d, 0, -@xs.delta_dbu, 2, true, true)
-      d = @ep.size_to_polygon(d, 0, @xs.delta_dbu / 2, 2, true, true)
-      d = @ep.size_to_polygon(d, @xs.delta_dbu / 2, 0, 2, true, true)
-      d = @ep.size_to_polygon(d, -@xs.delta_dbu, 0, 2, true, true)
-      d = @ep.size_to_polygon(d, @xs.delta_dbu / 2, 0, 2, true, true)
-    end
+    poly = []
+    d.each { |p| poly << p }
+    return poly
 
-    return d
+  end
 
+end
+
+# TODO: Currently, MaterialData is identical to LayoutData, but it represents
+# a cross section rather than mask data in xy plane
+class MaterialData < LayoutData
+
+  def initialize(polygons, xs)
+    super(polygons, xs)
   end
 
 end
@@ -508,7 +514,6 @@ class XSectionGenerator
   # Constructor
   def initialize(file_path)
 
-    # TODO: adjust this path:
     @file_path = file_path
     @lyp_file = nil
     @ep = RBA::EdgeProcessor.new
@@ -522,12 +527,22 @@ class XSectionGenerator
     return ld
   end
 
+  # TODO: for debugging only
+  def output_raw(layer_spec, d)
+
+    ls = string_to_layerinfo(layer_spec)
+    li = @target_layout.layer(ls)
+    shapes = @target_layout.cell(@target_cell).shapes(li)
+    shapes.insert(d)
+
+  end
+
   def output(layer_spec, layer_data)
 
     raise("'output' method: second parameter must be a geometry object") unless layer_data.kind_of?(LayoutData)
 
     ls = string_to_layerinfo(layer_spec)
-    li = @target_layout.insert_layer(ls)
+    li = @target_layout.layer(ls)
     shapes = @target_layout.cell(@target_cell).shapes(li)
 
     # confine the shapes to the region of interest
@@ -645,7 +660,7 @@ class XSectionGenerator
               downto = v
             end
             downto.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@
+              if !i.kind_of?(MaterialData) 
                 raise "'#{method}' method: 'into' expects a material parameter or an array of such"
               end
             end
@@ -656,7 +671,7 @@ class XSectionGenerator
               into = v
             end
             into.each do |i|
-              if !i.kind_of?(LayoutData) # should be MaterialData @@@
+              if !i.kind_of?(MaterialData) 
                 raise "'#{method}' method: 'into' expects a material parameter or an array of such"
               end
             end
@@ -763,12 +778,7 @@ class XSectionGenerator
 
     end
 
-    air = @air.data
-    air_sized = @ep.size_to_polygon(air, @delta, @delta, 2, true, true)
-    air_border = @ep.safe_boolean_to_polygon(air_sized, air, RBA::EdgeProcessor::mode_anotb, true, true)
-    mask_data = @ep.safe_boolean_to_polygon(air_border, mask_polygons, RBA::EdgeProcessor::mode_and, true, true)
-
-    return MaterialData.new(mask_data, self, @delta)
+    return MaskData.new(@air.data, mask_polygons, self)
 
   end
 
@@ -843,7 +853,7 @@ class XSectionGenerator
   end
 
   def bulk
-    MaterialData.new(@bulk.data, self, 0)
+    MaterialData.new(@bulk.data, self)
   end
 
   def dbu
@@ -855,11 +865,11 @@ class XSectionGenerator
   end
 
   # The basic generation method
-  def run
+  def run(p1, p2)
 
-    if !setup
-      return
-    end
+    @target_view = nil
+
+    setup(p1, p2)
 
     update_basic_regions
 
@@ -868,23 +878,19 @@ class XSectionGenerator
       text = file.read
     end
     if !text
-      RBA::MessageBox::critical("Error", "Error reading file #{@file_path}", RBA::MessageBox::b_ok)
-      return
+      raise("Error reading file #{@file_path}")
     end
 
-    begin
-      eval(text)
-    # Without this code, stack traces are shown (works better for development ..)
-    # rescue
-      # RBA::MessageBox::critical("Error", $!, RBA::MessageBox::b_ok)
-      # return
-    end
+    eval(text, binding, @file_path)
 
-    RBA::Application.instance.main_window.cm_lv_add_missing #@@@
+    # Show all layers which were created in between
+    RBA::Application.instance.main_window.cm_lv_add_missing 
     if @lyp_file
       @target_view.load_layer_props(@lyp_file)
     end
     @target_view.zoom_fit
+
+    @target_view
 
   end
 
@@ -892,45 +898,24 @@ private
 
   def update_basic_regions
     @area = RBA::Box.new(-@extend, -@depth - @below, @line_dbu.length + @extend, @height)
-    @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, 0, @line_dbu.length + @extend, @height))], self, 0)
-    @air_below = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth - @below, @line_dbu.length + @extend, -@depth))], self, 0)
-    @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, 0))], self, 0)
+    @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, 0, @line_dbu.length + @extend, @height))], self)
+    @air_below = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth - @below, @line_dbu.length + @extend, -@depth))], self)
+    @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, 0))], self)
     @roi = RBA::Box.new(0, -@depth - @below, @line_dbu.length, @height)
   end
 
-  def setup
+  def setup(p1, p2)
 
     # locate the layout and the (single) ruler
     app = RBA::Application.instance
     view = app.main_window.current_view
     if !view
-      RBA::MessageBox::critical("Error", "No view open for creating the cross section from", RBA::MessageBox::b_ok)
-      return false
-    end
-
-    ruler = nil
-    nrulers = 0
-    view.each_annotation do |a|
-      # Use only rulers with "plain line" style
-      # @@@ if a.style == RBA::Annotation::style_line
-        ruler = a
-        nrulers += 1
-      # @@@ end
-    end
-
-    if nrulers == 0
-      RBA::MessageBox::critical("Error", "No ruler present for the cross section line", RBA::MessageBox::b_ok)
-      return
-    end
-    if nrulers > 1
-      RBA::MessageBox::critical("Error", "More than one ruler present for the cross section line (with 'plain line' style)", RBA::MessageBox::b_ok)
-      return false
+      raise("No view open for creating the cross section from")
     end
 
     cv = view.cellview(view.active_cellview_index)
     if ! cv.is_valid?
-      RBA::MessageBox::critical("Error", "The selected layout is not valid", RBA::MessageBox::b_ok)
-      return false
+      raise("The selected layout is not valid")
     end
 
     @cv = cv
@@ -939,8 +924,8 @@ private
     @cell = cv.cell_index
 
     # get the start and end points in database units and micron
-    p1_dbu = RBA::Point::from_dpoint(ruler.p1 * (1.0 / @dbu))
-    p2_dbu = RBA::Point::from_dpoint(ruler.p2 * (1.0 / @dbu))
+    p1_dbu = RBA::Point::from_dpoint(p1 * (1.0 / @dbu))
+    p2_dbu = RBA::Point::from_dpoint(p2 * (1.0 / @dbu))
     @line_dbu = RBA::Edge.new(p1_dbu, p2_dbu)
 
     # create a new layout for the output
@@ -1016,7 +1001,7 @@ class XSectiongScriptEnvironment
         
       fn = RBA::FileDialog::get_open_file_name("Select Script", "", "XSection Scripts (*.xs);;All Files (*)");
       if fn.has_value?
-        file_path = run_script(fn.value)
+        run_script(fn.value)
         make_mru(fn.value)
       end
 
@@ -1066,19 +1051,49 @@ class XSectiongScriptEnvironment
 
   end
 
-  def run_script(fn)
-
-    view = RBA::Application.instance.main_window.current_view
-    if !view
-      raise "No view open for running the boolean script on"
-    end
-      
-    cv = view.cellview(view.active_cellview_index)
+  def run_script(fn, p1 = nil, p2 = nil)
 
     begin
-      XSectionGenerator.new(fn).run
-    rescue
-      RBA::MessageBox.critical("Script failed", $!.to_s, RBA::MessageBox.b_ok)
+
+      if !p1 || !p2
+
+        # locate the layout and the (single) ruler
+        app = RBA::Application.instance
+        view = app.main_window.current_view
+        if !view
+          raise("No view open for creating the cross section from")
+          return
+        end
+
+        ruler = nil
+        nrulers = 0
+        view.each_annotation do |a|
+          ruler = a
+          nrulers += 1
+        end
+
+        if nrulers == 0
+          raise("No ruler present for the cross section line")
+        end
+        if nrulers > 1
+          raise("More than one ruler present for the cross section line")
+        end
+
+        p1 = ruler.p1
+        p2 = ruler.p2
+
+      end
+
+      XSectionGenerator.new(fn).run(p1, p2)
+
+    # Without this rescue block stack traces are shown (for development)
+    rescue => ex
+      if $xs_run
+        raise ex
+      else
+        RBA::MessageBox.critical("Error", ex.to_s, RBA::MessageBox.b_ok)
+        nil
+      end
     end
 
   end
@@ -1122,4 +1137,15 @@ end
 
 $xsection_processing_environment = XSectiongScriptEnvironment.new
 
+if $xs_run && $xs_cut =~ /^(.*),(.*);(.*),(.*)$/ && $xs_out
+
+  p1 = RBA::DPoint::new($1.to_f, $2.to_f)
+  p2 = RBA::DPoint::new($3.to_f, $4.to_f)
+
+  puts("Running XSection script #{$xs_run} with #{p1.to_s} to #{p2.to_s} ..")
+  target_view = $xsection_processing_environment.run_script($xs_run, p1, p2)
+  puts("Writing #{$xs_out} ..")
+  target_view.active_cellview.layout.write($xs_out)
+
+end
 
