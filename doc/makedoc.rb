@@ -2291,8 +2291,6 @@ view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
 
-if false # does not work as expected
-
 # -------------------------------------------------------------------
 #  Doc grow sample 13
 
@@ -2343,15 +2341,15 @@ depth(1)
 m1 = layer("1/0")
 m2 = layer("2/0")
 
-# Grow with mask m1
-metal1 = mask(m1).grow(0.3, 0.1, :mode => :round)
-# Grow with mask m1, but with a different profile and ignoring metal1
-metal2 = mask(m1).grow(0.1, 0.3, :mode => :round, :through => metal1)
+substrate = bulk
+
+# Grow with mask m1 into the substrate
+metal = mask(m1).grow(0.3, 0.1, :mode => :round, :into => substrate)
 
 # output the material data to the target layout
-output("0/0", bulk)
-output("1/0", metal1)
-output("2/0", metal2)
+output("0/0", substrate)
+output("1/0", metal)
+
 END
 
 end
@@ -2389,36 +2387,36 @@ lp.source_datatype = 0
 view.insert_layer(view.end_layers, lp)
 
 ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(1.6, 0.3)
-ant.p2 = RBA::DPoint::new(1.6, 0)
+ant.p1 = RBA::DPoint::new(1.6, 0)
+ant.p2 = RBA::DPoint::new(1.6, -0.3)
 ant.style = RBA::Annotation::StyleArrowBoth
 ant.fmt = " $D"
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(1.25, 0.3)
-ant.p2 = RBA::DPoint::new(1.65, 0.3)
+ant.p1 = RBA::DPoint::new(1.25, -0.3)
+ant.p2 = RBA::DPoint::new(1.65, -0.3)
 ant.style = RBA::Annotation::StyleLine
 ant.fmt = ""
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(0.4, 0.15)
-ant.p2 = RBA::DPoint::new(0.4, -0.25)
+ant.p1 = RBA::DPoint::new(0.4, 0.2)
+ant.p2 = RBA::DPoint::new(0.4, -0.4)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.2)
+ant.p2 = RBA::DPoint::new(1.3, -0.4)
 ant.style = RBA::Annotation::StyleLine
 ant.fmt = ""
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
 ant.p1 = RBA::DPoint::new(1.3, 0.15)
-ant.p2 = RBA::DPoint::new(1.3, -0.25)
-ant.style = RBA::Annotation::StyleLine
-ant.fmt = ""
-view.insert_annotation(ant)
-
-ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(1.3, -0.2)
-ant.p2 = RBA::DPoint::new(0.4, -0.2)
+ant.p2 = RBA::DPoint::new(0.4, 0.15)
 ant.style = RBA::Annotation::StyleArrowBoth
 ant.fmt = "  MASK: $D"
 view.insert_annotation(ant)
@@ -2429,7 +2427,155 @@ view.update_content
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
+# -------------------------------------------------------------------
+#  Doc grow sample 14
+
+sample = "g14"
+
+main_view_index = mw.create_view
+main_view = mw.current_view
+
+main_cv = main_view.cellview(main_view.create_layout(false))
+main_ly = main_cv.layout
+main_top = main_ly.create_cell("TOP")
+
+l1 = main_ly.layer(1, 0)
+main_top.shapes(l1).insert(RBA::Box::new(-100, -600, 800, 600))
+
+l2 = main_ly.layer(2, 0)
+main_top.shapes(l2).insert(RBA::Box::new(-300, -600, 400, 600))
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(-0.5, 0)
+ant.p2 = RBA::DPoint::new(1.5, 0)
+ant.style = RBA::Annotation::StyleRuler
+main_view.insert_annotation(ant)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 5
+lp.fill_color = 0xff8080
+lp.frame_color = lp.fill_color
+lp.source_layer = 1
+lp.source_datatype = 0
+main_view.insert_layer(main_view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 9
+lp.fill_color = 0x8080ff
+lp.frame_color = lp.fill_color
+lp.source_layer = 2
+lp.source_datatype = 0
+main_view.insert_layer(main_view.end_layers, lp)
+
+main_view.select_cell(main_top.cell_index, 0)
+main_view.zoom_fit
+
+configure_view(main_view)
+
+fn = "#{sample}.png"
+
+main_view.save_image(fn, screenshot_width, screenshot_height)
+puts "Screenshot written to #{fn}"
+
+File.open("tmp.xs", "w") do |file|
+  file.puts(<<END);
+delta(0.001)
+
+# Specify wafer thickness
+depth(1)
+
+# Prepare input layers
+m1 = layer("1/0")
+m2 = layer("2/0")
+
+substrate = bulk
+
+stop = mask(m2).grow(0.05, :into => substrate)
+
+# Grow with mask m1 into the substrate
+metal = mask(m1).grow(0.3, 0.1, :mode => :round, :through => stop, :into => substrate)
+
+# output the material data to the target layout
+output("0/0", substrate)
+output("1/0", metal)
+output("2/0", stop)
+
+END
+
 end
+
+XSectionGenerator.new("tmp.xs").run
+
+view = mw.current_view
+view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
+
+view.clear_layers
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 2
+lp.fill_color = 0x808080
+lp.frame_color = lp.fill_color
+lp.source_layer = 0
+lp.source_datatype = 0
+lp.transparent = true
+view.insert_layer(view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 5
+lp.fill_color = 0xff8080
+lp.frame_color = lp.fill_color
+lp.source_layer = 1
+lp.source_datatype = 0
+view.insert_layer(view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 9
+lp.fill_color = 0x8080ff
+lp.frame_color = lp.fill_color
+lp.source_layer = 2
+lp.source_datatype = 0
+view.insert_layer(view.end_layers, lp)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.6, 0)
+ant.p2 = RBA::DPoint::new(1.6, -0.3)
+ant.style = RBA::Annotation::StyleArrowBoth
+ant.fmt = " $D"
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(0.8, -0.3)
+ant.p2 = RBA::DPoint::new(1.65, -0.3)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(0.4, 0.2)
+ant.p2 = RBA::DPoint::new(0.4, -0.4)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.2)
+ant.p2 = RBA::DPoint::new(1.3, -0.4)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.15)
+ant.p2 = RBA::DPoint::new(0.4, 0.15)
+ant.style = RBA::Annotation::StyleArrowBoth
+ant.fmt = "  MASK: $D"
+view.insert_annotation(ant)
+
+fn = "#{sample}_xs.png"
+
+view.update_content
+view.save_image(fn, screenshot_width, screenshot_height)
+puts "Screenshot written to #{fn}"
 
 # -------------------------------------------------------------------
 #  Doc etch sample 1
@@ -3757,4 +3903,302 @@ view.update_content
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
+
+# -------------------------------------------------------------------
+#  Doc etch sample 12
+
+sample = "e12"
+
+main_view_index = mw.create_view
+main_view = mw.current_view
+
+main_cv = main_view.cellview(main_view.create_layout(false))
+main_ly = main_cv.layout
+main_top = main_ly.create_cell("TOP")
+
+l1 = main_ly.layer(1, 0)
+main_top.shapes(l1).insert(RBA::Box::new(-100, -600, 800, 600))
+
+l2 = main_ly.layer(2, 0)
+main_top.shapes(l2).insert(RBA::Box::new(-200, -600, 400, 600))
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(-0.5, 0)
+ant.p2 = RBA::DPoint::new(1.5, 0)
+ant.style = RBA::Annotation::StyleRuler
+main_view.insert_annotation(ant)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 5
+lp.fill_color = 0xff8080
+lp.frame_color = lp.fill_color
+lp.source_layer = 1
+lp.source_datatype = 0
+main_view.insert_layer(main_view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 9
+lp.fill_color = 0x8080ff
+lp.frame_color = lp.fill_color
+lp.source_layer = 2
+lp.source_datatype = 0
+main_view.insert_layer(main_view.end_layers, lp)
+
+main_view.select_cell(main_top.cell_index, 0)
+main_view.zoom_fit
+
+configure_view(main_view)
+
+fn = "#{sample}.png"
+
+main_view.save_image(fn, screenshot_width, screenshot_height)
+puts "Screenshot written to #{fn}"
+
+File.open("tmp.xs", "w") do |file|
+  file.puts(<<END);
+delta(0.001)
+
+# Specify wafer thickness
+depth(1)
+
+# Prepare input layers
+m1 = layer("1/0")
+m2 = layer("2/0")
+
+substrate = bulk
+
+# Grow a stop layer
+stop = mask(m2).grow(0.05, :into => substrate)
+
+# Grow with mask m1, but only where there is a substrate surface
+mask(m1).etch(0.3, 0.1, :mode => :round, :into => substrate)
+
+# output the material data to the target layout
+output("0/0", substrate)
+output("2/0", stop)
+END
+
+end
+
+XSectionGenerator.new("tmp.xs").run
+
+view = mw.current_view
+view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
+
+view.clear_layers
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 2
+lp.fill_color = 0x808080
+lp.frame_color = lp.fill_color
+lp.source_layer = 0
+lp.source_datatype = 0
+lp.transparent = true
+view.insert_layer(view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 5
+lp.fill_color = 0xff8080
+lp.frame_color = lp.fill_color
+lp.source_layer = 1
+lp.source_datatype = 0
+view.insert_layer(view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 9
+lp.fill_color = 0x8080ff
+lp.frame_color = lp.fill_color
+lp.source_layer = 2
+lp.source_datatype = 0
+view.insert_layer(view.end_layers, lp)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.6, 0)
+ant.p2 = RBA::DPoint::new(1.6, -0.3)
+ant.style = RBA::Annotation::StyleArrowBoth
+ant.fmt = " $D"
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.25, -0.3)
+ant.p2 = RBA::DPoint::new(1.65, -0.3)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(0.4, 0.2)
+ant.p2 = RBA::DPoint::new(0.4, -0.05)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.2)
+ant.p2 = RBA::DPoint::new(1.3, -0.4)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.15)
+ant.p2 = RBA::DPoint::new(0.4, 0.15)
+ant.style = RBA::Annotation::StyleArrowBoth
+ant.fmt = "  MASK: $D"
+view.insert_annotation(ant)
+
+fn = "#{sample}_xs.png"
+
+view.update_content
+view.save_image(fn, screenshot_width, screenshot_height)
+puts "Screenshot written to #{fn}"
+
+# -------------------------------------------------------------------
+#  Doc etch sample 13
+
+sample = "e13"
+
+main_view_index = mw.create_view
+main_view = mw.current_view
+
+main_cv = main_view.cellview(main_view.create_layout(false))
+main_ly = main_cv.layout
+main_top = main_ly.create_cell("TOP")
+
+l1 = main_ly.layer(1, 0)
+main_top.shapes(l1).insert(RBA::Box::new(-100, -600, 800, 600))
+
+l2 = main_ly.layer(2, 0)
+main_top.shapes(l2).insert(RBA::Box::new(-200, -600, 400, 600))
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(-0.5, 0)
+ant.p2 = RBA::DPoint::new(1.5, 0)
+ant.style = RBA::Annotation::StyleRuler
+main_view.insert_annotation(ant)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 5
+lp.fill_color = 0xff8080
+lp.frame_color = lp.fill_color
+lp.source_layer = 1
+lp.source_datatype = 0
+main_view.insert_layer(main_view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 9
+lp.fill_color = 0x8080ff
+lp.frame_color = lp.fill_color
+lp.source_layer = 2
+lp.source_datatype = 0
+main_view.insert_layer(main_view.end_layers, lp)
+
+main_view.select_cell(main_top.cell_index, 0)
+main_view.zoom_fit
+
+configure_view(main_view)
+
+fn = "#{sample}.png"
+
+main_view.save_image(fn, screenshot_width, screenshot_height)
+puts "Screenshot written to #{fn}"
+
+File.open("tmp.xs", "w") do |file|
+  file.puts(<<END);
+delta(0.001)
+
+# Specify wafer thickness
+depth(1)
+
+# Prepare input layers
+m1 = layer("1/0")
+m2 = layer("2/0")
+
+substrate = bulk
+
+# Grow a stop layer
+stop = mask(m2).grow(0.05, :into => substrate)
+
+# Grow with mask m1, but only where there is a substrate surface
+mask(m1).etch(0.3, 0.1, :mode => :round, :into => substrate, :through => stop)
+
+# output the material data to the target layout
+output("0/0", substrate)
+output("2/0", stop)
+END
+
+end
+
+XSectionGenerator.new("tmp.xs").run
+
+view = mw.current_view
+view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
+
+view.clear_layers
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 2
+lp.fill_color = 0x808080
+lp.frame_color = lp.fill_color
+lp.source_layer = 0
+lp.source_datatype = 0
+lp.transparent = true
+view.insert_layer(view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 5
+lp.fill_color = 0xff8080
+lp.frame_color = lp.fill_color
+lp.source_layer = 1
+lp.source_datatype = 0
+view.insert_layer(view.end_layers, lp)
+
+lp = RBA::LayerProperties::new
+lp.dither_pattern = 9
+lp.fill_color = 0x8080ff
+lp.frame_color = lp.fill_color
+lp.source_layer = 2
+lp.source_datatype = 0
+view.insert_layer(view.end_layers, lp)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.6, 0)
+ant.p2 = RBA::DPoint::new(1.6, -0.3)
+ant.style = RBA::Annotation::StyleArrowBoth
+ant.fmt = " $D"
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(0.8, -0.3)
+ant.p2 = RBA::DPoint::new(1.65, -0.3)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(0.4, 0.2)
+ant.p2 = RBA::DPoint::new(0.4, -0.4)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.2)
+ant.p2 = RBA::DPoint::new(1.3, -0.05)
+ant.style = RBA::Annotation::StyleLine
+ant.fmt = ""
+view.insert_annotation(ant)
+
+ant = RBA::Annotation::new
+ant.p1 = RBA::DPoint::new(1.3, 0.15)
+ant.p2 = RBA::DPoint::new(0.4, 0.15)
+ant.style = RBA::Annotation::StyleArrowBoth
+ant.fmt = "  MASK: $D"
+view.insert_annotation(ant)
+
+fn = "#{sample}_xs.png"
+
+view.update_content
+view.save_image(fn, screenshot_width, screenshot_height)
+puts "Screenshot written to #{fn}"
 
