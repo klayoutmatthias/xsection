@@ -229,10 +229,10 @@ class MaterialData < LayoutData
   def grow(*args)
 
     # parse the arguments
-    (xy, z, into, through, on, taper, bias, mode) = parse_grow_etch_args(args, :grow)
+    (xy, z, into, through, on, taper, bias, mode, buried) = parse_grow_etch_args(args, :grow)
 
     # produce the geometry of the new material
-    d = produce_geom(xy, z, into, through, on, taper, bias, mode, :grow)
+    d = produce_geom(xy, z, into, through, on, taper, bias, mode, buried, :grow)
 
     # prepare the result
     res = MaterialData.new(d, @xs, 0)
@@ -255,14 +255,14 @@ class MaterialData < LayoutData
   def etch(*args)
 
     # parse the arguments
-    (xy, z, into, through, on, taper, bias, mode) = parse_grow_etch_args(args, :etch)
+    (xy, z, into, through, on, taper, bias, mode, buried) = parse_grow_etch_args(args, :etch)
 
     if !into
       raise "'etch' method: requires an 'into' specification"
     end
 
     # prepare the result
-    d = produce_geom(xy, z, into, through, on, taper, bias, mode, :etch)
+    d = produce_geom(xy, z, into, through, on, taper, bias, mode, buried, :etch)
 
     # produce the geometry of the etched material
     res = MaterialData.new(d, @xs, 0)
@@ -289,6 +289,7 @@ class MaterialData < LayoutData
     on = nil
     taper = nil
     bias = nil
+    buried = nil
     mode = :square
 
     args.each do |a|
@@ -332,6 +333,8 @@ class MaterialData < LayoutData
             if v != :round && v != :square && v != :octagon
               raise "'#{method}' method: 'mode' expects ':round', ':square' or ':octagon'"
             end
+          elsif k == :buried
+            buried = v.to_f
           elsif k == :taper
             taper = v.to_f
           elsif k == :bias
@@ -357,11 +360,11 @@ class MaterialData < LayoutData
       raise "'on' option cannot be combined with 'into' or 'through' option"
     end
 
-    [xy || 0.0, z, into, through, on, taper, bias, mode]
+    [xy || 0.0, z, into, through, on, taper, bias, mode, buried]
 
   end
 
-  def produce_geom(xy, z, into, through, on, taper, bias, mode, method)
+  def produce_geom(xy, z, into, through, on, taper, bias, mode, buried, method)
 
     prebias = bias || 0.0
     if xy < 0.0
@@ -427,6 +430,11 @@ class MaterialData < LayoutData
 
     offset = @delta
     d = @polygons
+
+    if (buried || 0.0).abs > 1e-6
+      t = RBA::Trans::new(RBA::Point::new(0, -(buried / @xs.dbu + 0.5).floor.to_i))
+      d = d.collect { |p| p.transformed(t) }
+    end
 
     # in the "into" case determine the interface region between self and into
     if into || through || on
