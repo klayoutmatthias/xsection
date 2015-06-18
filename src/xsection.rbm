@@ -1050,7 +1050,13 @@ class XSectionScriptEnvironment
     # try to save the MRU list to $HOME/.klayout-processing-mru
     i = 0
     home = ENV["HOME"]
-    if home
+    if $xsection_scripts
+      $xsection_scripts.split(":").each_with_index do |script,i|
+        if i < @mru_actions.size
+          @mru_actions[i].script = script
+        end
+      end
+    elsif home
       fn = File.join(home, ".klayout-xsection")
       begin
         File.open(fn, "r") do |file|
@@ -1118,6 +1124,11 @@ class XSectionScriptEnvironment
   end
 
   def make_mru(script)
+
+    # don't maintain MRU if an external list is provided
+    if $xsection_scripts
+      return
+    end
 
     scripts = [script]
     @mru_actions.each do |a|
