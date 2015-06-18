@@ -751,18 +751,24 @@ class XSectionGenerator
     end
 
     if to
+    
       less ||= 0
+      
       if @flipped
-        into.each do |i|
-          i.maskp([RBA::Polygon.new(RBA::Box.new(-@extend, to + less, @line_dbu.length + @extend, self.height_dbu))])
-        end
-        air.addp([RBA::Polygon.new(RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line_dbu.length + @extend, to + less))])
+        removed_box = RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line_dbu.length + @extend, to + less)
       else
-        into.each do |i|
-          i.maskp([RBA::Polygon.new(RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line_dbu.length + @extend, to - less))])
-        end
-        air.addp([RBA::Polygon.new(RBA::Box.new(-@extend, to - less, @line_dbu.length + @extend, self.height_dbu))])
+        removed_box = RBA::Box.new(-@extend, to - less, @line_dbu.length + @extend, self.height_dbu)
       end
+      
+      rem = LayoutData::new([], self)
+      into.each do |i|
+        rem.add(i.andp([RBA::Polygon.new(removed_box)]))
+        i.subp([RBA::Polygon.new(removed_box)])
+      end
+      
+      self.air.add(rem)
+      self.air.close_gaps
+     
     end
 
   end
