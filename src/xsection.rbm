@@ -373,8 +373,9 @@ class MaterialData < LayoutData
     end
 
     if taper
-      prebias += z * Math.tan(Math::PI / 180.0 * taper) - xy
-      xy += prebias
+      d = z * Math.tan(Math::PI / 180.0 * taper)
+      prebias += d - xy
+      xy = d
     end
 
     # determine the "into" material by joining the data of all "into" specs
