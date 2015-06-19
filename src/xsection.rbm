@@ -427,11 +427,6 @@ class MaskData < LayoutData
     air_masked = @ep.safe_boolean_to_polygon(@air_polygons, mp, RBA::EdgeProcessor::mode_and, true, true)
     me = (air_masked.empty? ? RBA::Edges::new : RBA::Edges::new(air_masked)) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp))
 
-    if (buried || 0.0).abs > 1e-6
-      t = RBA::Trans::new(RBA::Point::new(0, -(buried / @xs.dbu + 0.5).floor.to_i))
-      d = d.collect { |p| p.transformed(t) }
-    end
-
     # in the "into" case determine the interface region between self and into
     if into || through || on
       if on
@@ -495,6 +490,11 @@ class MaskData < LayoutData
       me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
       d.merge
 
+    end
+
+    if (buried || 0.0).abs > 1e-6
+      t = RBA::Trans::new(RBA::Point::new(0, -(buried / @xs.dbu + 0.5).floor.to_i))
+      d.transform(t)
     end
 
     if through
