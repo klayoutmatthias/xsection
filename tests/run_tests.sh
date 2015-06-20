@@ -7,7 +7,7 @@ failed=""
 
 bin=../src/xsection.rbm
 
-for tc_file in xs_etch*; do
+for tc_file in *.xs; do
 
   tc=`echo $tc_file | sed 's/\.xs$//'` 
 
