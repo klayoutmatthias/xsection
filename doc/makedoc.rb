@@ -1,4 +1,18 @@
 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+
+# This script produces the documentation images.
+# Use makedoc.sh to run it.
 
 def configure_view(view)
 
@@ -9,6 +23,19 @@ def configure_view(view)
   view.set_config("grid-style0", "invisible")
   view.set_config("grid-style1", "light-dotted-lines")
   view.set_config("grid-style2", "light-dotted-lines")
+  view.set_config("grid-visible", "true")
+
+end
+
+def configure_view_xs(view)
+
+  view.set_config("grid-micron", "0.1")
+  view.set_config("background-color", "#000000")
+  view.set_config("grid-color", "#404040")
+  view.set_config("grid-show-ruler", "true")
+  view.set_config("grid-style0", "invisible")
+  view.set_config("grid-style1", "invisible")
+  view.set_config("grid-style2", "invisible")
   view.set_config("grid-visible", "true")
 
 end
@@ -75,7 +102,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -157,7 +185,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -223,7 +253,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -305,7 +336,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -396,7 +429,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -1.3, 2.1, 0.5))
@@ -499,7 +533,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -562,7 +598,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -644,7 +681,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -707,7 +746,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -789,7 +829,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -852,7 +894,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -934,7 +977,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -997,7 +1042,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1079,7 +1125,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -1142,7 +1190,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1224,7 +1273,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -1287,7 +1338,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1369,7 +1421,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -1432,7 +1486,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1514,7 +1569,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -1577,7 +1634,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1659,7 +1717,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -1724,7 +1784,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1806,7 +1867,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -1883,7 +1946,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -1971,7 +2035,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2048,7 +2114,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -2136,7 +2203,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2217,7 +2286,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -2286,7 +2356,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2354,7 +2426,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -2423,7 +2496,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2504,7 +2579,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -2573,7 +2649,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2640,7 +2718,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.8, 2.1, 0.3))
@@ -2709,7 +2788,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2771,7 +2852,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -2853,7 +2935,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -2916,7 +3000,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -2998,7 +3083,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3061,7 +3148,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -3143,7 +3231,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3206,7 +3296,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -3288,7 +3379,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3351,7 +3444,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -3433,7 +3527,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3496,7 +3592,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -3578,7 +3675,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3641,7 +3740,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -3723,7 +3823,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3786,7 +3888,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -3868,7 +3971,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -3947,7 +4052,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -1.1, 2.1, 0))
@@ -4035,7 +4141,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -4116,7 +4224,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -4185,7 +4294,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -4265,7 +4376,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.6, 2.1, 0.5))
@@ -4334,7 +4446,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
@@ -4400,7 +4514,8 @@ END
 
 end
 
-XSectionGenerator.new("tmp.xs").run
+XSectionScriptEnvironment.new.run_script("tmp.xs")
+File.unlink("tmp.xs")
 
 view = mw.current_view
 view.zoom_box(RBA::DBox::new(-0.1, -0.8, 2.1, 0.3))
@@ -4469,7 +4584,9 @@ view.insert_annotation(ant)
 
 fn = "#{sample}_xs.png"
 
+configure_view_xs(view)
 view.update_content
+
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
