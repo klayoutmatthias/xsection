@@ -25,6 +25,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
+# Version 2.0 (2017-04-14)
+#
 
 # A feasibility study for a cross section generation using
 # boolean operations. See "cmos.xs" for a brief description of the
@@ -36,7 +38,10 @@
 # TODO: Deposition does not follow the substrate surface
 # TODO: taper parameters are not consistent (how do xy and taper angle interact?)
 
-# Problems: empty polyon arrays produce errors with boolean_to_polygon because
+# ----------------------------------------------------------------------------
+
+# @brief An enhancement to the Edge processor
+# Empty polyon arrays produce errors with boolean_to_polygon because
 # RBA does not recognize the empty array as an array of polygons and then there is
 # an ambiguity between the edge-input and polygon input variants
 # Thus this extension which checks for empty input and performs some default operation:
