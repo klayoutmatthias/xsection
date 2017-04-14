@@ -1,11 +1,15 @@
 #!/bin/sh -e
 
+echo "Using KLayout:"
+klayout -v 
+echo ""
+
 rm -rf run_dir
 mkdir -p run_dir
 
 failed=""
 
-bin=../src/xsection.rbm
+bin=../src/xsection.lym
 
 for tc_file in *.xs; do
 
