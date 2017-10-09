@@ -24,7 +24,7 @@ For a reference of the elements of the XS scripts, see [XS File Reference](https
  
 The <tt>src</tt> folder contains the package definition file ("grain.xml"), the "macros" folder with the
 actual package code ("xsection.lym"). The download URL for the package index is therefore the pseudo-SVN
-URL "https://github.com/klayoutmatthias/xsection.git/tags/x.y/src".
+URL <tt>https://github.com/klayoutmatthias/xsection.git/tags/x.y/src</tt>.
 
 The <tt>tests</tt> folder contains some regression tests for the cross section package. To run the tests,
 make sure "klayout" is in your path and use
