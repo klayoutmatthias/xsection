@@ -30,9 +30,9 @@ the ".xs" file and to generate the cross section in a new layout window. Once yo
 used a ".xs" file, it is available in the recently used files list below the "XSection Script" 
 menu entry for quick access.
 
-An introduction into writing XS files can be found here: [Introduction](DocIntro). 
+An introduction into writing XS files can be found here: [Writing XS Files - an Introduction](DocIntro). 
 
-A function reference is also available here: [Reference](DocReference).
+A function reference is also available here: [XS File Reference](DocReference).
 
 ## Example
 
