@@ -1,10 +1,8 @@
 # Writing XS files - an introduction
 
-[TOC]
-
 Cross section files are simple to write. They provide a description how to convert a planar layout into a vertical material stack. XS scripts are really "scripts" - they are small programs which are executed by KLayout's internal Ruby interpreter. Simple scripts can be written without much knowledge of the Ruby language by following a simple recipe. Complex scripts can utilize the full power of that scheme by using loops, procedures, if statements and so on.
 
-This document is an introduction into XS files. A reference with more details about the functions, methods and their parameters is provided here: [DocReference].
+This document is an introduction into XS files. A reference with more details about the functions, methods and their parameters is provided here: [DocReference](Reference).
 
 Let us start with a simple example for a XS file:
 
@@ -20,7 +18,6 @@ metal1 = mask(m1).grow(0.3, 0.1, :mode => :round)
 output("0/0", bulk)
 output("1/0", metal1)
 ```
-<br>
 
 With the following input: 
 
@@ -52,7 +49,6 @@ In our example, no conversion takes place, and the input layer (layer 1, datatyp
 ```ruby
 mask(m1)
 ```
-<br>
 
 The mask function will basically create the cut along the ruler and prepare the mask to become a "seed" for subsequent grow and etch operations. Note that using a mask seed is not mandatory. There are also maskless operations (uniform deposit, epitaxy or planarization steps) which do not require mask data. 
 
@@ -61,11 +57,10 @@ In this example, there is just a single, mask-driven deposition step which is pe
 ```ruby 
 metal1 = mask(m1).grow(0.3, 0.1, :mode => :round)
 ```
-<br>
 
 "grow" is the method and the result of this is a "material" object. In that case, we specify an "overgrow" with an elliptical profile. The first argument of the grow method is the thickness of the deposited material in micrometers. The second argument is the lateral extension (diffusion) in micrometer units. ":mode => :round" is an option (a named argument in Ruby) which specifies round or elliptical mode. In the end, this specification will widen the original line of 0.4 micrometers to 0.6 micrometers, because it will add 0.1 micrometers to each side and produce a sheet thickness of 0.3 micrometers.
 
-The grow method is one of the two basic methods for the process description. It can not only grow some material atop of the current stack but also convert material below the surface to another material. Find more about this method here: [DocGrow]
+The grow method is one of the two basic methods for the process description. It can not only grow some material atop of the current stack but also convert material below the surface to another material. Find more about this method here: [DocGrow](Grow Method)
 
 A material object can be used later as a target of etch processes for example. In our case, we simply output the material to an arbitrary output layer (here layer 1, datatype 0):
 
@@ -73,7 +68,6 @@ A material object can be used later as a target of etch processes for example. I
 output("0/0", bulk)
 output("1/0", metal1)
 ```
-<br>
 
 "bulk" is a pseudo-material which denotes the substrate. It is written to layer 0, datatype 0 for illustration. In the screenshot, the metal1 material has been colored light red, the bulk material is colored gray.
 
@@ -84,7 +78,6 @@ The above form of the script is not mandatory. "m1" and "metal1" are variables w
 ```ruby
 output("1/0", mask(layer("1/0")).grow(0.3, 0.1, :mode => :round))
 ```
-<br>
  
 But obviously readability suffers, so the expanded notation used before is recommended. But this example illustrates that there is no magic behind the material names - they're just variables carrying certain information. For the interested readers: Ruby objects of various kinds representing layout data or material data.
 
@@ -98,14 +91,12 @@ l2 = layer("2/0")
 # Boolean NOT between layer 1, datatype 0 and layer 2, datatype 0
 p = l1.not(l2)
 ```
-<br>
 
 The same can be written more compactly if required. But again, readability suffers:
 
 ```ruby
 p = layer("1/0").not(layer("2/0"))
 ```
-<br>
 
 Other Boolean operations available are:
 
@@ -119,7 +110,6 @@ p2 = l1.and(l2)
 # Boolean XOR between layer 1, datatype 0 and layer 2, datatype 0:
 p3 = l1.xor(l2)
 ```
-<br>
 
 Layers can be sized (biased). Sizing will shift the edges by the specified value in micrometer units. Positive values will shift the edges to the outside of the figures, negative values to the inside. Hence a positive value with increase the width of a line by twice that value, a negative value will reduce the width by twice the value. Negative values may make figures vanish fully or partially, positive values may remove holes or gaps in the layout. 
 
@@ -132,7 +122,6 @@ p = l1.sized(0.2)
 # this will modify l1 by sizing it with a value of 0.1 in x direction only:
 l1.size(0.1, 0)
 ```
-<br>
 
 Layers can be inverted. Again there is a in-place and out-of-place version of that method:
 
@@ -143,7 +132,6 @@ l1.invert
 # Returns an inverted copy (which is identical with layer 1, datatype 0 again):
 p = l1.inverted
 ```
-<br>
 
 ### Caveat: Ruby and object references
 
@@ -158,7 +146,6 @@ b = a
 # this will invert "b" too, since b is the same object than a:
 a.invert
 ```
-<br>
 
 To create a real copy, either use the out-of-place methods or use the "dup"
 method which creates a copy:
@@ -173,7 +160,6 @@ a = layer("1/0")
 b = a.dup
 a.invert
 ```
-<br>
 
 ### Material data is layout data too
 
@@ -188,7 +174,6 @@ metal1b = mask(l2).grow(0.1, 0.1, :mode => :round)
 
 output("1/0", metal1a.or(metal1b))
 ```
-<br>
 
 ## Etch operations
 
@@ -212,7 +197,6 @@ mask(m1i).etch(0.3, 0.1, :mode => :round, :into => [ metal1, substrate ])
 output("0/0", substrate)
 output("1/0", metal1)
 ```
-<br>
 
 With the following input: 
 
@@ -228,7 +212,6 @@ The layer preparation step performs the inversion using the "inverted" method:
 m1 = layer("1/0")
 m1i = m1.inverted
 ```
-<br>
 
 "m1i" will be the inverted m1 mask and will be used as the "seed" for the etch.
 
@@ -238,7 +221,6 @@ This is achieved with the following assignment:
 ```ruby
 substrate = bulk
 ```
-<br>
 
 "bulk" is a pseudo-material describing the wafer substrate. Initially it is the
 wafer material below the surface. "bulk" is read-only (in fact, "bulk" is a function), so we have to create a material we can modify by storing the material data object in a variable we call "substrate".
@@ -250,11 +232,10 @@ The materials the etch method will remove are listed with the ":into" parameter.
 ```ruby
 mask(m1i).etch(0.3, 0.1, :mode => :round, :into => [ metal1, substrate ])
 ```
-<br>
 
 Because we etch deeper (0.3) than the sheet we have deposited before (0.25), we will remove a little bit of substrate as well. Note also, that we reduce the line with from 0.8 (drawn) to 0.6 at the top edge of the metal line. This bias will typically be compensated by a sizing operation when the mask data is prepared in a real process. 
 
-Find details about the "etch" method here: [DocEtch]
+Find details about the "etch" method here: [DocEtch](Etch Method)
 
 ## Backside processing
 
@@ -291,7 +272,6 @@ planarize(:downto => substrate, :into => metal2)
 output("0/0", substrate)
 output("1/0", metal1.or(metal2))
 ```
-<br>
 
 With the following input: 
 
@@ -306,14 +286,12 @@ The topside processing part is the same than the previous sample and produces a 
 ```ruby
 depth(1)
 ```
-<br>
 
 The interesting part starts with this line:
 
 ```ruby
 flip
 ```
-<br>
 
 This will basically turn the wafer and processing now happens from the backside. You can flip again to return to top side processing. We use a sequence of operations to create a filled through-silicon via:
 
@@ -325,7 +303,6 @@ mask(m2).etch(1, :taper => 4, :into => substrate)
 metal2 = deposit(0.3, 0.3, :mode => :square)
 planarize(:downto => substrate, :into => metal2)
 ```
-<br>
 
 The etch step is configured to produce a tapered hole with a taper angle of 4 degree. The initial (now bottom) dimension of the hole is defined by the m2 mask which is shown in blue color in the layout and the structure has a dimension of 0.4 micrometers. 
 
@@ -338,6 +315,4 @@ On output we merge both metal types (front and backside deposited material) to f
 ```ruby
 output("1/0", metal1.or(metal2))
 ```
-<br>
-
 
