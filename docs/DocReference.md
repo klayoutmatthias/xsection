@@ -18,7 +18,7 @@ The following standalone functions are available:
 | <tt>below(<i>b</i>)</tt> | Configures the lower height of the processing window for backside processing (see below) |
 | <tt>bulk</tt> | A pseudo-material describing the wafer body |
 | <tt>delta(<i>d</i>)</tt> | Configures the accuracy parameter (see below) |
-| <tt>deposit(<i>...<tt>)</tt> (synonyms: grow, diffuse) | Deposits material as a uniform sheet. Equivalent to <tt>all.grow(...<tt>)</tt>. Gives a material data object |
+| <tt>deposit(<i>...</i>)</tt> (synonyms: grow, diffuse) | Deposits material as a uniform sheet. Equivalent to <tt>all.grow(<i>...</i>)</tt>. Gives a material data object |
 | <tt>depth(<i>d</i>)</tt> | Configures the depth of the processing window or the wafer thickness for backside processing (see below) |
 | <tt>etch(<i>...</i>)</tt> | Uniform etching. Equivalent to <tt>all.etch(...)</tt> |
 | <tt>extend(<i>x</i>)</tt> | Configures the computation margin (see below) |
