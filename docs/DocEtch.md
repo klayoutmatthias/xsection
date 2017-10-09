@@ -13,7 +13,7 @@ This simple case removes material from the substrate and leaves a hole where the
 
 The etch method has up to two arguments and a couple of options which have to be put after the arguments in the usual Ruby fashion, using the notation ":name => value":
 
-<tt>etch(</tt>height<tt>, </tt>lateral<tt>, </tt> options ...<tt>)</tt>
+<tt>etch(<i>height</i>, <i>lateral</i>, <i>options ...</i>)</tt>
 
 The height argument is mandatory and specifies the depth of the etch. The lateral parameter specifies the lateral extension (underetch). The lateral extension is optional and defaults to 0. The lateral extension can be negative. In that case, the profile will be aligned with the mask at the top. Otherwise it is aligned at the bottom.
 
