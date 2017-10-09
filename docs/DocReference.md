@@ -1,6 +1,6 @@
 # XS File Reference
 
-This document details the functions available in XS scripts. An introduction is available as a separate document: [Introduction](DocIntro)
+This document details the functions available in XS scripts. An introduction is available as a separate document: [Writing XS Files - an Introduction](DocIntro)
 
 In XS scripts, there are basically three kind of functions and methods:
 

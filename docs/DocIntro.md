@@ -2,7 +2,7 @@
 
 Cross section files are simple to write. They provide a description how to convert a planar layout into a vertical material stack. XS scripts are really "scripts" - they are small programs which are executed by KLayout's internal Ruby interpreter. Simple scripts can be written without much knowledge of the Ruby language by following a simple recipe. Complex scripts can utilize the full power of that scheme by using loops, procedures, if statements and so on.
 
-This document is an introduction into XS files. A reference with more details about the functions, methods and their parameters is provided here: [Reference](DocReference).
+This document is an introduction into XS files. A reference with more details about the functions, methods and their parameters is provided here: [XS File Reference](DocReference).
 
 Let us start with a simple example for a XS file:
 
