@@ -1,7 +1,7 @@
 # XSection
 
 This is a fork of the former xsection@klayout project on SourceForge. It's been turned into a 
-KLayout package now and is available through KLayout's new package manager (available from 0.25 on).
+KLayout package now and is available through KLayout's new package manager (available for version 0.25 and later).
 
 The goal of this project is to provide an add-on to KLayout (www.klayout.de) to 
 create and visualize a realistic cross-section view for VLSI designs supporting a wide range of 
