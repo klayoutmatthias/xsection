@@ -36,7 +36,7 @@ A function reference is also available here: [DocReference].
 
 ## Example
 
-The following screenshot shows a sample cross section taken from the [cmos.xs](../samples/cmos.xs) sample file and the [sample.gds](../samples/sample.gds) layout found in the samples folder:
+The following screenshot shows a sample cross section taken from the [cmos.xs](cmos.xs) sample file and the [sample.gds](sample.gds) layout found in the samples folder:
 
 ![xsection_70p](xsection_70p.png)
 
