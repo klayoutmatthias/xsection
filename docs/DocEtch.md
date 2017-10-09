@@ -1,4 +1,4 @@
-# <tt>etch</tt> method
+# The <tt>etch</tt> Method
 
 The etch method is one of the basic methods for describing a process. It is called on a mask data object. The basic use case is:
 
