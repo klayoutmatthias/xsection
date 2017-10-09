@@ -19,16 +19,20 @@ For a reference of the elements of the XS scripts, see [XS File Reference](https
 
 The basic structure is:
 
- * <tt>docs</tt> The documentation for GitHub pages
- * <tt>src</tt> The package sources - this is the folder the package index will get as download URL
- * <tt>tests</tt> Tests for the package
+ * <tt>docs</tt> The documentation
  * <tt>samples</tt> Some sample files
- 
+ * <tt>src</tt> The package sources
+ * <tt>tests</tt> Test sources and golden data
+
+The `docs` folder contain the MD file and images for the GitHub pages.
+
+The `samples` folder holds a few files for playing around.
+
 The `src` folder contains the package definition file (`grain.xml`), the `macros` folder with the
 actual package code (`xsection.lym`). The download URL for the package index is therefore the pseudo-SVN
 URL `https://github.com/klayoutmatthias/xsection.git/tags/x.y/src`.
 
-The <tt>tests</tt> folder contains some regression tests for the cross section package. To run the tests,
+The <tt>tests</tt> folder contains some regression tests for the package. To run the tests,
 make sure "klayout" is in your path and use
 
 ```sh
