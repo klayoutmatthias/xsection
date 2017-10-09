@@ -1,7 +1,5 @@
 # The <tt>grow</tt> Method
 
-[TOC]
-
 The grow method is one of the basic methods for describing a process. It is called on a mask data object. The basic use case is:
 
 ```ruby
@@ -14,7 +12,7 @@ This simple case deposits a material where the layer is drawn with a rectangular
 
 The grow method has up to two arguments and a couple of options which have to be put after the arguments in the usual Ruby fashion, using the notation ":name => value":
 
-<tt>grow(</tt>height<tt>, </tt>lateral<tt>, </tt> options ...<tt>)</tt>
+<tt>grow(<i>height</i>, <i>lateral</i>, <i>options ...</i>)</tt>
 
 The height argument is mandatory and specifies the thickness of the layer grown. The lateral parameter specifies the lateral extension (overgrow, diffusion). The lateral extension is optional and defaults to 0. The lateral extension can be negative. In that case, the profile will be aligned with the mask at the bottom. Otherwise it is aligned at the top.
 

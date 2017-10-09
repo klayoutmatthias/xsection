@@ -15,20 +15,20 @@ The following standalone functions are available:
 | Function | Description |
 | -------- | ----------- |
 | <tt>all</tt> | A pseudo-mask, covering the whole wafer |
-| <tt>below(</tt>b<tt>)</tt> | Configures the lower height of the processing window for backside processing (see below) |
+| <tt>below(<i>b</i>)</tt> | Configures the lower height of the processing window for backside processing (see below) |
 | <tt>bulk</tt> | A pseudo-material describing the wafer body |
-| <tt>delta(</tt>d<tt>)</tt> | Configures the accuracy parameter (see below) |
-| <tt>deposit(</tt>...<tt>)</tt> (synonyms: grow, diffuse) | Deposits material as a uniform sheet. Equivalent to <tt>all.grow(...<tt>)</tt>. Gives a material data object |
-| <tt>depth(</tt>d<tt>)</tt> | Configures the depth of the processing window or the wafer thickness for backside processing (see below) |
-| <tt>etch(</tt>...<tt>)</tt> | Uniform etching. Equivalent to <tt>all.etch(...)</tt> |
-| <tt>extend(</tt>x<tt>)</tt> | Configures the computation margin (see below) |
-| <tt>flip</tt> | starts or ends backside processing |
-| <tt>height(</tt>h<tt>)</tt> | Configures the height of the processing window (see below) |
-| <tt>layer(</tt>layer_spec<tt>)</tt> | Fetches an input layer from the original layout. Returns a layer data object. |
-| <tt>layers_file(</tt>lyp_filename<tt>)</tt> | Configures a .lyp layer properties file to be used on the cross-section layout |
-| <tt>mask(</tt>layout_data<tt>)</tt> | Designates the layout_data object as a litho pattern (mask). This is the starting point for structured grow or etch operations. Gives a mask data object. |
-| <tt>output(</tt>layer_spec<tt>,</tt> material<tt>)</tt> | Outputs a material object to the output layout |
-| <tt>planarize(</tt>...<tt>)</tt> | Planarization |
+| <tt>delta(<i>d</i>)</tt> | Configures the accuracy parameter (see below) |
+| <tt>deposit(<i>...<tt>)</tt> (synonyms: grow, diffuse) | Deposits material as a uniform sheet. Equivalent to <tt>all.grow(...<tt>)</tt>. Gives a material data object |
+| <tt>depth(<i>d</i>)</tt> | Configures the depth of the processing window or the wafer thickness for backside processing (see below) |
+| <tt>etch(<i>...</i>)</tt> | Uniform etching. Equivalent to <tt>all.etch(...)</tt> |
+| <tt>extend(<i>x</i>)</tt> | Configures the computation margin (see below) |
+| <tt>flip<i> | starts or ends backside processing |
+| <tt>height(<i>h</i>)</tt> | Configures the height of the processing window (see below) |
+| <tt>layer(<i>layer_spec</i>)</tt> | Fetches an input layer from the original layout. Returns a layer data object. |
+| <tt>layers_file(<i>lyp_filename</i>)</tt> | Configures a .lyp layer properties file to be used on the cross-section layout |
+| <tt>mask(<i>layout_data</i>)</tt> | Designates the layout_data object as a litho pattern (mask). This is the starting point for structured grow or etch operations. Gives a mask data object. |
+| <tt>output(<i>layer_spec</i>, <i>material</i>)</tt> | Outputs a material object to the output layout |
+| <tt>planarize(<i>...</i>)</tt> | Planarization |
 
 ### <tt>all</tt> method
 
@@ -144,14 +144,14 @@ The following methods are available for these objects:
 
 | Method | Description |
 | ------ | ----------- |
-| <tt>size(</tt>s<tt>)</tt> or <tt>size(</tt>x<tt>,</tt> y<tt>)</tt> | Isotropic or anisotropic sizing |
-| <tt>sized(</tt>s<tt>)</tt> or <tt>sized(</tt>x<tt>,</tt> y<tt>)</tt> | Out-of-place version of <tt>size</tt> |
+| <tt>size(<i>s</i>)</tt> or <tt>size(<i>x</i>,<i> y</i>)</tt> | Isotropic or anisotropic sizing |
+| <tt>sized(<i>s</i>)</tt> or <tt>sized(<i>x</i>,<i> y</i>)</tt> | Out-of-place version of <tt>size</tt> |
 | <tt>invert</tt> | Invert a layer |
 | <tt>inverted</tt> | Out-of-place version of <tt>invert</tt> |
-| <tt>or(</tt>other<tt>)</tt> | Boolean OR (merging) with another layer |
-| <tt>and(</tt>other<tt>)</tt> | Boolean AND (intersection) with another layer |
-| <tt>xor(</tt>other<tt>)</tt> | Boolean XOR (symmetric difference) with another layer |
-| <tt>not(</tt>other<tt>)</tt> | Boolean NOT (difference) with another layer |
+| <tt>or(<i>other</i>)</tt> | Boolean OR (merging) with another layer |
+| <tt>and(<i>other</i>)</tt> | Boolean AND (intersection) with another layer |
+| <tt>xor(<i>other</i>)</tt> | Boolean XOR (symmetric difference) with another layer |
+| <tt>not(<i>other</i>)</tt> | Boolean NOT (difference) with another layer |
 
 ### <tt>size</tt> method
 
@@ -229,8 +229,8 @@ The following methods are available for mask data objects:
 
 | Method | Description |
 | ------ | ----------- |
-| <tt>grow(</tt>...<tt>)</tt> | Deposition of material where this mask is present |
-| <tt>etch(</tt>...<tt>)</tt> | Removal of material where this mask is present |
+| <tt>grow(<i>...</i>)</tt> | Deposition of material where this mask is present |
+| <tt>etch(<i>...</i>)</tt> | Removal of material where this mask is present |
 
 ### <tt>grow</tt> method
 

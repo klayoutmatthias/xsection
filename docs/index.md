@@ -1,4 +1,4 @@
-# XSection@KLayout Project Home Page
+# XSection Project Home Page
 
 [xsection](https://github.com/klayoutmatthias/xsection) is a script that implements a cross-section generator for the KLayout VLSI
 layout viewer and editor [http://www.klayout.de](http://www.klayout.de).
