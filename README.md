@@ -17,13 +17,15 @@ For a reference of the elements of the XS scripts, see [XS File Reference](https
 
 ## Project Files
 
+The basic structure is:
+
  * <tt>docs</tt> The documentation for GitHub pages
  * <tt>src</tt> The package sources - this is the folder the package index will get as download URL
  * <tt>tests</tt> Tests for the package
  * <tt>samples</tt> Some sample files
  
-The <tt>src</tt> folder contains the package definition file ("grain.xml"), the "macros" folder with the
-actual package code ("xsection.lym"). The download URL for the package index is therefore the pseudo-SVN
+The `src` folder contains the package definition file (`grain.xml`), the `macros` folder with the
+actual package code (`xsection.lym`). The download URL for the package index is therefore the pseudo-SVN
 URL `https://github.com/klayoutmatthias/xsection.git/tags/x.y/src`.
 
 The <tt>tests</tt> folder contains some regression tests for the cross section package. To run the tests,
