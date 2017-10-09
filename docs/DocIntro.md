@@ -2,7 +2,7 @@
 
 Cross section files are simple to write. They provide a description how to convert a planar layout into a vertical material stack. XS scripts are really "scripts" - they are small programs which are executed by KLayout's internal Ruby interpreter. Simple scripts can be written without much knowledge of the Ruby language by following a simple recipe. Complex scripts can utilize the full power of that scheme by using loops, procedures, if statements and so on.
 
-This document is an introduction into XS files. A reference with more details about the functions, methods and their parameters is provided here: [DocReference](Reference).
+This document is an introduction into XS files. A reference with more details about the functions, methods and their parameters is provided here: [Reference](DocReference).
 
 Let us start with a simple example for a XS file:
 
@@ -60,7 +60,7 @@ metal1 = mask(m1).grow(0.3, 0.1, :mode => :round)
 
 "grow" is the method and the result of this is a "material" object. In that case, we specify an "overgrow" with an elliptical profile. The first argument of the grow method is the thickness of the deposited material in micrometers. The second argument is the lateral extension (diffusion) in micrometer units. ":mode => :round" is an option (a named argument in Ruby) which specifies round or elliptical mode. In the end, this specification will widen the original line of 0.4 micrometers to 0.6 micrometers, because it will add 0.1 micrometers to each side and produce a sheet thickness of 0.3 micrometers.
 
-The grow method is one of the two basic methods for the process description. It can not only grow some material atop of the current stack but also convert material below the surface to another material. Find more about this method here: [DocGrow](Grow Method)
+The grow method is one of the two basic methods for the process description. It can not only grow some material atop of the current stack but also convert material below the surface to another material. Find more about this method here: [Grow Method](DocGrow)
 
 A material object can be used later as a target of etch processes for example. In our case, we simply output the material to an arbitrary output layer (here layer 1, datatype 0):
 
@@ -235,7 +235,7 @@ mask(m1i).etch(0.3, 0.1, :mode => :round, :into => [ metal1, substrate ])
 
 Because we etch deeper (0.3) than the sheet we have deposited before (0.25), we will remove a little bit of substrate as well. Note also, that we reduce the line with from 0.8 (drawn) to 0.6 at the top edge of the metal line. This bias will typically be compensated by a sizing operation when the mask data is prepared in a real process. 
 
-Find details about the "etch" method here: [DocEtch](Etch Method)
+Find details about the "etch" method here: [Etch Method](DocEtch)
 
 ## Backside processing
 
