@@ -17,7 +17,7 @@ such as etching, deposition and material conversion (i.e. implant).
 
 The source tree contains one example for such a file in "samples/cmos.xs". This example 
 illustrates how to create a ".xs" and has a lot of documentation inside. Have a look at 
-this file here: [cmos.xs](../samples/cmos.xs).
+this file here: [cmos.xs](cmos.xs).
 
 ## Using The Cross Section Module
 
@@ -30,9 +30,9 @@ the ".xs" file and to generate the cross section in a new layout window. Once yo
 used a ".xs" file, it is available in the recently used files list below the "XSection Script" 
 menu entry for quick access.
 
-An introduction into writing XS files can be found here: [DocIntro]. 
+An introduction into writing XS files can be found here: [Introduction](DocIntro). 
 
-A function reference is also available here: [DocReference].
+A function reference is also available here: [Reference](DocReference).
 
 ## Example
 
