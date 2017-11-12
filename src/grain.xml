@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <salt-grain>
  <name>xsection</name>
- <version>1.0</version>
+ <version>1.1</version>
  <api-version/>
  <title>Ruby script</title>
  <doc>A generator for vertical cross sections of layouts using a technology description file.</doc>
  <doc-url>https://klayoutmatthias.github.io/xsection</doc-url>
- <url>https://github.com/klayoutmatthias/xsection.git/tags/1.0</url>
  <license>MIT</license>
  <author>Matthias Köfferlein</author>
  <author-contact>matthias@klayout.de</author-contact>
