@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 echo "Using KLayout:"
 klayout -v 
@@ -11,7 +11,14 @@ failed=""
 
 bin=../src/macros/xsection.lym
 
-for tc_file in *.xs; do
+if [ "$1" == "" ]; then
+  all_xs=( *.xs )
+  tc_files=${all_xs[@]}
+else
+  tc_files=$*
+fi
+
+for tc_file in $tc_files; do
 
   tc=`echo $tc_file | sed 's/\.xs$//'` 
 

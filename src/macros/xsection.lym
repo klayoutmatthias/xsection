@@ -100,6 +100,10 @@ class LayoutData
     @xs = xs
   end
 
+  def upcast(polygons)
+    LayoutData.new(polygons, @xs)
+  end
+
   def load(layout, cell, box, layer_spec)
 
     ls = string_to_layerinfo(layer_spec)
@@ -141,9 +145,9 @@ class LayoutData
 
   def sized(*args)
     if args.length == 1
-      LayoutData.new(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, 2, true, true), @xs)
+      upcast(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, 2, true, true))
     elsif args.length == 2
-      LayoutData.new(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, (args[1] / @xs.dbu + 0.5).floor.to_i, 2, true, true), @xs)
+      upcast(@ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, (args[1] / @xs.dbu + 0.5).floor.to_i, 2, true, true))
     else
       raise("sized method expects on or two arguments")
     end
@@ -164,43 +168,43 @@ class LayoutData
   end
 
   def inverted
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, [RBA::Polygon.new(@xs.background)], RBA::EdgeProcessor::mode_xor, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, [RBA::Polygon.new(@xs.background)], RBA::EdgeProcessor::mode_xor, true, true))
   end
 
   def or(other)
     raise "'or': argument is not a layer" unless other.kind_of?(LayoutData)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_or, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_or, true, true))
   end
 
   def orp(other)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_or, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_or, true, true))
   end
 
   def and(other)
     raise "'and': argument is not a layer" unless other.kind_of?(LayoutData)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_and, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_and, true, true))
   end
 
   def andp(other)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_and, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_and, true, true))
   end
 
   def xor(other)
     raise "'xor': argument is not a layer" unless other.kind_of?(LayoutData)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_xor, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_xor, true, true))
   end
 
   def xorp(other)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_xor, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_xor, true, true))
   end
 
   def not(other)
     raise "'not': argument is not a layer" unless other.kind_of?(LayoutData)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_anotb, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other.data, RBA::EdgeProcessor::mode_anotb, true, true))
   end
 
   def notp(other)
-    LayoutData.new(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_anotb, true, true), @xs)
+    upcast(@ep.safe_boolean_to_polygon(@polygons, other, RBA::EdgeProcessor::mode_anotb, true, true))
   end
 
   def add(other)
@@ -242,6 +246,10 @@ class MaskData &lt; LayoutData
     super([], xs)
     @air_polygons = air_polygons
     @mask_polygons = mask_polygons
+  end
+
+  def upcast(polygons)
+    MaskData.new(@air_polygons, polygons, @xs)
   end
 
   def grow(*args)
@@ -451,11 +459,16 @@ class MaskData &lt; LayoutData
     # in the "into" case determine the interface region between self and into
     if into || through || on
       if on
-        me &amp;= RBA::Edges::new(on_data)
+        data = on_data
       elsif through
-        me &amp;= RBA::Edges::new(through_data)
+        data = through_data
       else
-        me &amp;= RBA::Edges::new(into_data)
+        data = into_data
+      end
+      if data.empty?
+        me = []
+      else
+        me &amp;= RBA::Edges::new(data)
       end
     end
 
@@ -532,12 +545,26 @@ class MaskData &lt; LayoutData
 
 end
 
-# TODO: Currently, MaterialData is identical to LayoutData, but it represents
+# MaterialData is pretty identical to LayoutData, but it represents
 # a cross section rather than mask data in xy plane
 class MaterialData &lt; LayoutData
 
   def initialize(polygons, xs)
     super(polygons, xs)
+  end
+
+  def upcast(polygons)
+    MaterialData.new(polygons, @xs)
+  end
+
+  def discard
+    @xs.air.add(self)
+    self
+  end
+
+  def keep
+    @xs.air.sub(self)
+    self
   end
 
 end
@@ -1133,12 +1160,27 @@ class XSectionScriptEnvironment
 
     # Without this rescue block stack traces are shown (for development)
     rescue =&gt; ex
+      
       if $xs_run || $xs_debug
         raise ex
       else
-        RBA::MessageBox.critical("Error", ex.to_s, RBA::MessageBox.b_ok)
+
+        # Extract the error location in the script.
+        # The backtrace line is something like "(filename).xs:(line):in ...".
+
+        location = "(not found)"
+        ex.backtrace.each do |bt|
+          if !bt.to_s.start_with?(File.dirname(__FILE__))
+            location = bt.sub(/:in .*$/, "")
+            break
+          end
+        end
+
+        RBA::MessageBox.critical("Error", ex.to_s + "\nin " + location, RBA::MessageBox.b_ok)
         nil
+
       end
+
     end
 
   end
