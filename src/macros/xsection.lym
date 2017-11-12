@@ -25,9 +25,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# Version 2.0 (2017-04-14)
-#
-
 # A feasibility study for a cross section generation using
 # boolean operations. See "cmos.xs" for a brief description of the
 # commands available and some examples.
