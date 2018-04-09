@@ -121,7 +121,7 @@ class LayoutData
 
         shape = shape_iter.shape
         if shape.is_polygon? || shape.is_path? || shape.is_box?
-          @polygons.push(shape.polygon.transformed_cplx(shape_iter.itrans))
+          @polygons.push(shape.polygon.transformed(shape_iter.trans))
         end
 
         shape_iter.next
@@ -289,13 +289,12 @@ class MaskData &lt; LayoutData
     res = MaterialData.new(d, @xs)
 
     # consume material and add to air
-    if into
-      into.each do |i|
-        i.sub(res)
-      end
+    into.each do |i|
+      j = LayoutData::new(i.data, @xs)
+      i.sub(res)
+      j.sub(i)
+      @xs.air.add(j)
     end
-
-    @xs.air.add(res)
 
   end
 
@@ -1052,6 +1051,7 @@ class XSectionScriptEnvironment
 
     app = RBA::Application.instance
     mw = app.main_window
+    mw || return
 
     @action = RBA::Action.new
     @action.title = "XSection Script"
