@@ -13,7 +13,7 @@ l1.layer_indices.each do |ll1|
 
   ll2 = l2.find_layer(l1.get_info(ll1))
   if !ll2
-    raise "Layer #{li1.to_s} of layout #{$a} now present in layout #{$b}"
+    raise "Layer #{li1.to_s} of layout #{$a} not present in layout #{$b}"
   end
 
   layer_pairs << [ ll1, ll2 ]
@@ -21,6 +21,7 @@ l1.layer_indices.each do |ll1|
 end
 
 l2.layer_indices.each do |ll2|
+  li2 = l2.get_info(ll2)
   ll1 = l1.find_layer(l2.get_info(ll2))
   if !ll1
     raise "Layer #{li2.to_s} of layout #{$b} now present in layout #{$a}"
@@ -28,11 +29,11 @@ l2.layer_indices.each do |ll2|
 end
 
 if l1.top_cell.name != l2.top_cell.name
-  raise "Top cell name of layout #{$a} (#{l1.top.name} differs from that of layout #{$b} (#{l2.top_name})"
+  raise "Top cell name of layout #{$a} (#{l1.top.name}) differs from that of layout #{$b} (#{l2.top_name})"
 end
 
 if (l1.dbu - l2.dbu) > 1e-6
-  raise "Database unit of layout #{$a} (#{l1.dbu} differs from that of layout #{$b} (#{l2.dbu})"
+  raise "Database unit of layout #{$a} (#{l1.dbu}) differs from that of layout #{$b} (#{l2.dbu})"
 end
 
 diff = false
