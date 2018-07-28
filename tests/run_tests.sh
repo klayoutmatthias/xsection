@@ -3,7 +3,7 @@
 export KLAYOUT_HOME=/dev/null
 
 echo "Using KLayout:"
-klayout -v
+klayout -v 
 echo ""
 
 rm -rf run_dir
@@ -22,7 +22,7 @@ fi
 
 for tc_file in $tc_files; do
 
-  tc=`echo $tc_file | sed 's/\.xs$//'`
+  tc=`echo $tc_file | sed 's/\.xs$//'` 
 
   echo "---------------------------------------------------"
   echo "Running testcase $tc .."
@@ -36,12 +36,12 @@ for tc_file in $tc_files; do
     xs_cut="-1,0;1,0"
   fi
 
-  klayout -rx -z -rd xs_run=$tc.xs -rd xs_cut="$xs_cut" -rd xs_out=run_dir/$tc.gds "$xs_input" -r $bin
+  klayout -rx -z -rd xs_run=$tc.xs -rd xs_cut="$xs_cut" -rd xs_out=run_dir/$tc.gds "$xs_input" -r $bin 
 
-  if !(python kdb_xor.py au/$tc.gds run_dir/$tc.gds --tol=15 -v) then
-    failed="$failed $tc"
-  else
+  if python kdb_xor.py au/$tc.gds run_dir/$tc.gds --tol=15 -v then
     echo "No differences found."
+  else
+    failed="$failed $tc"
   fi
 
 done
