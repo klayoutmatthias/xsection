@@ -1070,10 +1070,43 @@ class XSectionScriptEnvironment
 
     end
 
+    @active_tech = RBA::Action.new
+    @active_tech.title = "XSection: Active Technolgy"
+    @active_tech.shortcut = "Ctrl+Shift+X"
+    @active_tech.on_triggered do
+
+      view = RBA::Application.instance.main_window.current_view
+      if !view
+        raise "No view open for running the xsection script on"
+      end
+      tech_name = view.active_cellview.technology
+      tech = RBA::Technology.technology_by_name(tech_name)
+      xsect_dir = File.join(tech.base_path, 'xsect')
+      unless File.exist?(xsect_dir)
+        raise "No Xsection directory present for #{tech_name}"
+      end
+      xsect_fileglob = File.join(xsect_dir, '*.xs')
+
+      files = []
+      Dir.glob(xsect_fileglob) do |xs_file|
+        files &lt;&lt; xs_file.to_s
+      end
+      if files.length &lt; 1
+        raise "No XSection file found for technology #{tech_name}."
+      elsif files.length &gt; 1
+        raise "More than one .xs file found for technology #{tech_name}. Found #{files.length}"
+      else
+        xs_file = files[0]
+        run_script(xs_file)
+      end
+
+    end
+
     menu = mw.menu
     menu.insert_separator("tools_menu.end", "xsection_script_group")
     menu.insert_menu("tools_menu.end", "xsection_script_submenu", "XSection Scripts")
     menu.insert_item("tools_menu.xsection_script_submenu.end", "xsection_script_load", @action)
+    menu.insert_item("tools_menu.xsection_script_submenu.end", "xsection_for_technology", @active_tech)
     menu.insert_separator("tools_menu.xsection_script_submenu.end.end", "xsection_script_mru_group")
 
     @mru_actions = []
