@@ -57,15 +57,17 @@ def main(layout1, layout2, tolerance):
     raise Difference("Differences found between layouts {} and {}".format(layout1, layout2))
 
 import sys
+import argparse
 if __name__ == "__main__":
-  # global a, b, tol  # The names of the layouts, passed through command line
-  a = 'au/xs_bug4.gds'
-  b = 'run_dir/xs_bug4.gds'
-  tol = 10
+  parser = argparse.ArgumentParser(description='Run a klayout XOR to check yes/no for differences.')
+  parser.add_argument('file1', help='first .gds (or .oas) file')
+  parser.add_argument('file2', help='second .gds (or .oas) file')
+  parser.add_argument('--tol', type=int, default=10, help='tolerance in database units (default = 10)')
+  args = parser.parse_args()
+
   try:
-    main(a, b, int(tol))
+    main(args.file1, args.file2, args.tol)
   except Difference as err:
     print(err)
     sys.exit(1)
-
 

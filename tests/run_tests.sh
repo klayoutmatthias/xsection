@@ -38,7 +38,7 @@ for tc_file in $tc_files; do
 
   klayout -rx -z -rd xs_run=$tc.xs -rd xs_cut="$xs_cut" -rd xs_out=run_dir/$tc.gds "$xs_input" -r $bin 
 
-  python fast_xor.py || failed="$failed $tc"
+  python fast_xor.py au/$tc.gds run_dir/$tc.gds --tol=15 || failed="$failed $tc"
 
 done
 
