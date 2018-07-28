@@ -38,11 +38,7 @@ for tc_file in $tc_files; do
 
   klayout -rx -z -rd xs_run=$tc.xs -rd xs_cut="$xs_cut" -rd xs_out=run_dir/$tc.gds "$xs_input" -r $bin 
 
-  if klayout -b -rd a=au/$tc.gds -rd b=run_dir/$tc.gds -rd tol=10 -r run_xor.rb; then
-    echo "No differences found."
-  else
-    failed="$failed $tc"
-  fi
+  python fast_xor.py || failed="$failed $tc"
 
 done
 

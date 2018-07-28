@@ -56,11 +56,16 @@ def main(layout1, layout2, tolerance):
   if diff:
     raise Difference("Differences found between layouts {} and {}".format(layout1, layout2))
 
+import sys
 if __name__ == "__main__":
-  global a, b, tol  # The names of the layouts, passed through command line
-  # a = 'au/xs_bug4.gds'
-  # b = 'run_dir/xs_bug4.gds'
-  # tol = 10
-  main(a, b, int(tol))
+  # global a, b, tol  # The names of the layouts, passed through command line
+  a = 'au/xs_bug4.gds'
+  b = 'run_dir/xs_bug4.gds'
+  tol = 10
+  try:
+    main(a, b, int(tol))
+  except Difference as err:
+    print(err)
+    sys.exit(1)
 
 
