@@ -513,7 +513,15 @@ class MaskData &lt; LayoutData
       end
 
       kp = RBA::Polygon::new(kernel_pts)
-      me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
+      n = 0
+      me.each do |e| 
+        d.insert(kp.minkowsky_sum(e, false))
+        if (n += 1) == 10
+          # merge each 10 iteration steps to reduce overhead of the final merge
+          d.merge
+          n = 0
+        end
+      end
       d.merge
 
     elsif mode == :square
@@ -524,7 +532,8 @@ class MaskData &lt; LayoutData
       kernel_pts &lt;&lt; RBA::Point::new(xyi, zi)
       kernel_pts &lt;&lt; RBA::Point::new(xyi, -zi)
 
-      kp = RBA::Polygon::new(kernel_pts)
+      kp = RBA::SimplePolygon::new
+      kp.set_points(kernel_pts, true)  # "raw" - don't optimize away
       me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
       d.merge
 
