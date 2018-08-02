@@ -448,6 +448,17 @@ class MaskData &lt; LayoutData
     end
 
     pi = (prebias / @xs.dbu + 0.5).floor.to_i
+    xyi = (xy / @xs.dbu + 0.5).floor.to_i
+    zi = (z / @xs.dbu + 0.5).floor.to_i
+    # calculate all edges without prebias and check if prebias would remove edges if so reduce it
+    mp = @ep.size_to_polygon(@mask_polygons, 0, 0, 2, true, true)
+    mp.each do |p|
+      box = p.bbox
+      if box.width &lt;= 2 * pi
+        pi = (box.width / 2.0).floor.to_i - 1
+        xyi = pi
+      end
+    end
     mp = @ep.size_to_polygon(@mask_polygons, -pi, 0, 2, true, true)
     air_masked = @ep.safe_boolean_to_polygon(@air_polygons, mp, RBA::EdgeProcessor::mode_and, true, true)
     me = (air_masked.empty? ? RBA::Edges::new : RBA::Edges::new(air_masked)) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp))
@@ -467,9 +478,6 @@ class MaskData &lt; LayoutData
         me &amp;= RBA::Edges::new(data)
       end
     end
-
-    xyi = (xy / @xs.dbu + 0.5).floor.to_i
-    zi = (z / @xs.dbu + 0.5).floor.to_i
 
     d = RBA::Region::new
 
