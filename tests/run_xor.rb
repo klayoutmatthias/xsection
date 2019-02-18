@@ -28,7 +28,7 @@ l2.layer_indices.each do |ll2|
 end
 
 if l1.top_cell.name != l2.top_cell.name
-  raise "Top cell name of layout #{$a} (#{l1.top.name} differs from that of layout #{$b} (#{l2.top_name})"
+  raise "Top cell name of layout #{$a} (#{l1.top_cell.name} differs from that of layout #{$b} (#{l2.top_cell.name})"
 end
 
 if (l1.dbu - l2.dbu) > 1e-6
