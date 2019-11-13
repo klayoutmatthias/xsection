@@ -155,8 +155,10 @@ class LayoutData
       @polygons = @ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, 2, true, true)
     elsif args.length == 2
       @polygons = @ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, (args[1] / @xs.dbu + 0.5).floor.to_i, 2, true, true)
+    elsif args.length == 3
+      @polygons = @ep.size_to_polygon(@polygons, (args[0] / @xs.dbu + 0.5).floor.to_i, (args[1] / @xs.dbu + 0.5).floor.to_i, args[2].to_i, true, true)
     else
-      raise("size method expects on or two arguments")
+      raise("size method expects one to three arguments")
     end
   end
 
@@ -259,15 +261,21 @@ class MaskData &lt; LayoutData
 
     # prepare the result
     res = MaterialData.new(d, @xs)
-
+    
     # consume material
     if into
       into.each do |i|
         i.sub(res)
+        @xs.clean(i)
       end
     else
       @xs.air.sub(res)
+      # clean the air material
+      @xs.clean(@xs.air)
     end
+
+    # clean the grown material
+    @xs.clean(res)
 
     return res
 
@@ -287,17 +295,22 @@ class MaskData &lt; LayoutData
 
     # produce the geometry of the etched material
     res = MaterialData.new(d, @xs)
-
+    
     # consume material and add to air
     into.each do |i|
       j = LayoutData::new(i.data, @xs)
       i.sub(res)
+      # clean the remaining material
+      @xs.clean(i)
       j.sub(i)
       @xs.air.add(j)
     end
 
-  end
+    # clean the air material
+    @xs.clean(@xs.air)
 
+  end
+  
   def parse_grow_etch_args(args, method)
 
     xy = nil
@@ -384,7 +397,9 @@ class MaskData &lt; LayoutData
 
   def produce_geom(xy, z, into, through, on, taper, bias, mode, buried, method)
 
-    prebias = bias || 0.0
+    dbias = @xs.delta_dbu
+    
+    prebias = 0.0
     if xy &lt; 0.0
       xy = -xy
       prebias += xy
@@ -447,23 +462,31 @@ class MaskData &lt; LayoutData
       end
     end
 
+    bi = ((bias || 0.0) / @xs.dbu + 0.5).floor.to_i
+    if bi != 0
+      # for backward compatibility the bias is inverse
+      mp = @ep.size_to_polygon(@mask_polygons, -bi, 2, true, true)
+    else
+      mp = @mask_polygons
+    end
+    
     pi = (prebias / @xs.dbu + 0.5).floor.to_i
     xyi = (xy / @xs.dbu + 0.5).floor.to_i
     zi = (z / @xs.dbu + 0.5).floor.to_i
-    # calculate all edges without prebias and check if prebias would remove edges if so reduce it
-    mp = @ep.size_to_polygon(@mask_polygons, 0, 0, 2, true, true)
-    mp.each do |p|
-      box = p.bbox
-      if box.width &lt;= 2 * pi
-        pi = (box.width / 2.0).floor.to_i - 1
-        xyi = pi
-      end
+    
+    ap_masked = @ep.safe_boolean_to_polygon(@air_polygons, mp, RBA::EdgeProcessor::mode_and, true, true)
+    me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp)))
+    
+    if pi &gt; 0
+      ap_sized = @ep.size_to_polygon(@air_polygons, -pi, 0, 2, true, true)
+      mp_sized = @ep.size_to_polygon(mp, -pi, 0, 2, true, true)
+      ap_masked_sized = @ep.safe_boolean_to_polygon(ap_sized, mp_sized, RBA::EdgeProcessor::mode_and, true, true)
+      me_sized = ap_masked_sized.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked_sized) - (mp_sized.empty? ? RBA::Edges::new : RBA::Edges::new(mp_sized)))
+    else
+      me_sized = me
     end
-    mp = @ep.size_to_polygon(@mask_polygons, -pi, 0, 2, true, true)
-    air_masked = @ep.safe_boolean_to_polygon(@air_polygons, mp, RBA::EdgeProcessor::mode_and, true, true)
-    me = (air_masked.empty? ? RBA::Edges::new : RBA::Edges::new(air_masked)) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp))
 
-    # in the "into" case determine the interface region between self and into
+    # in the "into", "through" and "on" case determine the interface region between self and into
     if into || through || on
       if on
         data = on_data
@@ -475,11 +498,15 @@ class MaskData &lt; LayoutData
       if data.empty?
         me = []
       else
-        me &amp;= RBA::Edges::new(data)
+        me &amp;= RBA::Region::new(data).sized(@xs.delta_dbu)
+        if pi &gt; 0
+          data_sized = @ep.size_to_polygon(data, -pi, 2, true, true)
+          me_sized &amp;= RBA::Region::new(data_sized).sized(@xs.delta_dbu)
+        else
+          me_sized = me
+        end
       end
     end
-
-    d = RBA::Region::new
 
     if taper &amp;&amp; xyi &gt; 0
 
@@ -489,22 +516,35 @@ class MaskData &lt; LayoutData
       kernel_pts &lt;&lt; RBA::Point::new(xyi, 0)
       kernel_pts &lt;&lt; RBA::Point::new(0, -zi)
 
-      kp = RBA::Polygon::new(kernel_pts)
-      me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
-      d.merge
+      d = produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
 
     elsif xyi &lt;= 0
+
+      d = RBA::Region::new
 
       # TODO: there is no way to do that with a Minkowsky sum currently
       # since polygons cannot be lines except through dirty tricks
       dz = RBA::Point::new(0, zi)
-      me.each { |e| d.insert(RBA::Polygon::new([ e.p1 - dz, e.p2 - dz, e.p2 + dz, e.p1 + dz ])) }
+      me.each do |e| 
+        d.insert(RBA::Polygon::new([ e.p1 - dz, e.p2 - dz, e.p2 + dz, e.p1 + dz ]))
+      end
+      if pi != 0
+        d.size(-pi, 0, 2)
+      end
       d.merge
 
     elsif mode == :round || mode == :octagon
 
-      # approximate round corners by 64 points for "round" and 8 for "octagon"
-      n = (mode == :round ? 64 : 8)
+      # approximate round corners by 64 points (or less when in the order of delta_dbu) for "round" 
+      # and 8 for "octagon"
+      # nmin is the minimum number of points required to achieve a resolution of delta_dbu for
+      # the circle.
+      if mode == :round
+        nmin = (Math::PI * Math::sqrt(0.5 * [xyi, zi].max.to_f / @xs.delta_dbu.to_f) + 0.9).to_i
+        n = [ 64, [ nmin, 8 ].max ].min
+      else
+        n = 8
+      end
       da = 2.0 * Math::PI / n
       rf = 1.0 / Math::cos(da * 0.5)
       kernel_pts = []
@@ -512,17 +552,7 @@ class MaskData &lt; LayoutData
         kernel_pts &lt;&lt; RBA::Point::from_dpoint(RBA::DPoint::new(xyi * rf * Math::cos(da * (i + 0.5)), zi * rf * Math::sin(da * (i + 0.5))))
       end
 
-      kp = RBA::Polygon::new(kernel_pts)
-      n = 0
-      me.each do |e| 
-        d.insert(kp.minkowsky_sum(e, false))
-        if (n += 1) == 10
-          # merge each 10 iteration steps to reduce overhead of the final merge
-          d.merge
-          n = 0
-        end
-      end
-      d.merge
+      d = produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
 
     elsif mode == :square
 
@@ -532,11 +562,10 @@ class MaskData &lt; LayoutData
       kernel_pts &lt;&lt; RBA::Point::new(xyi, zi)
       kernel_pts &lt;&lt; RBA::Point::new(xyi, -zi)
 
-      kp = RBA::SimplePolygon::new
-      kp.set_points(kernel_pts, true)  # "raw" - don't optimize away
-      me.each { |e| d.insert(kp.minkowsky_sum(e, false)) }
-      d.merge
+      d = produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
 
+    else
+      d = RBA::Region::new
     end
 
     if (buried || 0.0).abs &gt; 1e-6
@@ -549,13 +578,53 @@ class MaskData &lt; LayoutData
     end
 
     d &amp;= RBA::Region::new(into_data)
-
+    
     poly = []
     d.each { |p| poly &lt;&lt; p }
     return poly
 
   end
 
+  # Produces the edges "sized" with the kernel given by "kernel_pts"
+  # As the requirement is to provide "negative kernels" which actually
+  # take away layout from the original geometry, we provide the input
+  # geometry "pre-shrinked" (negative sizing in horizontal direction).
+  # This pre-shrink size is "pi" and the corresponding edges are in 
+  # "me_sized". 
+  # Pre-shrinking will remove small features which we have to add again. 
+  # For this purpose, the original, non-shrinked edges are supplied with 
+  # "me". We compute their contributions by applying the kernel per-edge
+  # and shrink with pi also per-edge. Later we join these contributions
+  # with the original.
+  def produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
+  
+    d = RBA::Region::new
+  
+    kp = RBA::SimplePolygon::new
+    kp.set_points(kernel_pts, true)  # "raw" - don't optimize away
+    
+    me_sized.each do |e| 
+      d.insert(kp.minkowsky_sum(e, false))
+    end
+    
+    if pi &gt; 0
+      # add contributions from the original edges, but sized after folding with
+      # the kernel. This will provide feature contributions from parts which are
+      # smaller than the kernel's width.
+      me.each do |e| 
+        pe = kp.minkowsky_sum(e, false)
+        pe_sized = @ep.size_to_polygon([ pe ], -pi, 0, 2, true, true)
+        pe_sized.each do |p|
+          d.insert(p)
+        end
+      end
+    end
+      
+    d.merge
+    d
+  
+  end
+  
 end
 
 # MaterialData is pretty identical to LayoutData, but it represents
@@ -612,6 +681,11 @@ class XSectionGenerator
   end
 
   def output(layer_spec, layer_data)
+  
+    # allows using the output spec on not-yet-defined layers
+    if !layer_data
+      return
+    end
 
     raise("'output' method: second parameter must be a geometry object") unless layer_data.kind_of?(LayoutData)
 
@@ -717,6 +791,22 @@ class XSectionGenerator
 
   end
 
+  def clean(mat)
+
+    d = self.delta  
+    mat.size(-0.5 * d, 0, 0)
+    mat.size(d, 0, 0)
+    mat.size(-0.5 * d, 0, 0)
+    mat.size(0, -0.5 * d, 0)
+    mat.size(0, d, 0)
+    mat.size(0, -0.5 * d, 0)
+    
+  end
+
+  def bang # @@@
+    puts("@@@ BANG!")
+  end # @@@
+  
   def planarize(*args)
 
     downto = nil
@@ -779,6 +869,8 @@ class XSectionGenerator
         end
       end
 
+      downto_data = @ep.safe_boolean_to_polygon([ RBA::Polygon.new(@roi) ], downto_data, RBA::EdgeProcessor::mode_and, true, true)
+
       # determine upper bound of material
       if downto_data
           downto_data.each do |p|
@@ -797,7 +889,10 @@ class XSectionGenerator
 
       # determine upper bound of our material
       into.each do |i|
-        i.data.each do |p|
+      
+        into_data = @ep.safe_boolean_to_polygon([ RBA::Polygon.new(@roi) ], i.data, RBA::EdgeProcessor::mode_and, true, true)
+        
+        into_data.each do |p|
           yt = p.bbox.top
           yb = p.bbox.bottom
           to ||= yt
@@ -807,6 +902,7 @@ class XSectionGenerator
             to = [ to, yt, yb ].min
           end
         end
+        
       end
 
     end
@@ -828,6 +924,7 @@ class XSectionGenerator
       end
       
       self.air.add(rem)
+      clean(self.air)
      
     end
 
@@ -861,8 +958,11 @@ class XSectionGenerator
 
   end
 
-  def delta(x)
-    @delta = (x / @dbu + 0.5).floor.to_i
+  def delta(x = nil)
+    if x
+      @delta = (x / @dbu + 0.5).floor.to_i
+    end
+    @delta * @dbu
   end
 
   def delta_dbu
