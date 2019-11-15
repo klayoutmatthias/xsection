@@ -12,7 +12,7 @@
 
 module XS
 
-  def string_to_layerinfo(layer_spec)
+  def self.string_to_layerinfo(layer_spec)
   
     # convert the layer specification into a LayerInfo structure
     # format: "l", "l/d", "n(l/d)" or "n".
@@ -71,7 +71,7 @@ module XS
   
       raise("'output' method: second parameter must be a geometry object") unless layer_data.kind_of?(LayoutData)
   
-      ls = string_to_layerinfo(layer_spec)
+      ls = XS.string_to_layerinfo(layer_spec)
       li = @target_layout.layer(ls)
       shapes = @target_layout.cell(@target_cell).shapes(li)
   

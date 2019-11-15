@@ -61,7 +61,7 @@ module XS
   
     def load(layout, cell, box, layer_spec)
   
-      ls = string_to_layerinfo(layer_spec)
+      ls = XS::string_to_layerinfo(layer_spec)
   
       # look up the layer
       layer_index = nil
