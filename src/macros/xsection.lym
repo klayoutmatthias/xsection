@@ -803,10 +803,6 @@ class XSectionGenerator
     
   end
 
-  def bang # @@@
-    puts("@@@ BANG!")
-  end # @@@
-  
   def planarize(*args)
 
     downto = nil
