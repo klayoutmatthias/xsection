@@ -326,68 +326,6 @@ module XS
   
     end
 
-    # Produces the edges with a a kernel - that is a "pen" which 
-    # is moved along the edges. The pen is formed by the kernel points.
-    # The kernel needs to be symmetric: the second half needs to be 
-    # a x-mirrored copy of the first half. Each half needs to be a 
-    # convex half-contour.
-    def self.produce_edges_with_kernel(me, kernel_pts)
-    
-      d = RBA::Region::new
-
-      me.each do |e|
-        ep = MaskData.produce_edge_with_kernel(e, kernel_pts)
-        ep.each do |p|
-          d.insert(p)
-        end
-      end
-      
-      d.merge
-      d
-    
-    end
-
-    # produce a single edge with kernel
-    def self.produce_edge_with_kernel(e, kernel_pts)
-
-      if e.dy < 0
-        e = e.dup
-        e.swap_points
-      end
-      p1 = e.p1
-      p2 = e.p2
-          
-      n = kernel_pts.size
-
-      imax = nil
-      dmax = nil
-      (n / 2).times do |i|
-        p = kernel_pts[i]
-        d = e.distance(p)
-        if !dmax || dmax < d
-          imax = i
-          dmax = d
-        end
-      end
-
-      pts = []
-      
-      i = (imax + n / 2) % n
-      (n / 2 + 1).times do
-        pts << kernel_pts[i] + p1
-        i = (i + 1) % n
-      end
-      i = imax
-      (n / 2 + 1).times do
-        pts << kernel_pts[i] + p2
-        i = (i + 1) % n
-      end
-      
-      ep = RBA::EdgeProcessor::new
-      ep.simple_merge_p2p([ RBA::Polygon::new(pts) ], false, false, 1)
-        
-    end
-    
     # Computes the convolution of the edge sequence with the kernel 
     # (an array of points). After the convolution, a horizontal negative
     # bias (pi, a positive value) is applied. This allows implementation
