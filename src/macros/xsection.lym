@@ -30,36 +30,6 @@ require("xsection")
 
 module XS
 
-  # ----------------------------------------------------------------
-  # A special action to implement the cross section MRU menu item
-  
-  class XSectionMRUAction &lt; RBA::Action
-  
-    def initialize(&amp;action)
-      @action = action
-    end
-  
-    def triggered 
-      @action.call(self) 
-    end
-  
-    def script=(s)
-      @script = s
-      self.visible = (s != nil)
-      if s
-        self.title = File.basename(s) 
-      end
-    end
-  
-    def script
-      @script
-    end
-  
-  private
-    @action
-    @script
-  end
-  
   @xsection_processing_environment = XSectionScriptEnvironment.new
   
   # trigger batch-mode actions
@@ -76,7 +46,21 @@ module XS
     target_view = @xsection_processing_environment.run_script($xs_run, p1, p2)
     puts("Writing #{$xs_out} ..")
     target_view.active_cellview.layout.write($xs_out)
-  
+
+  elsif RBA::Application::instance.main_window
+
+    # Workaround: only initialize, if not in the first place:
+    # otherwise the initialization of the standard rulers won't happen.
+    if RBA::Application::instance.get_config("ruler-templates") != ""
+      xs_ruler = RBA::Annotation::new
+      xs_ruler.category = "XS"
+      xs_ruler.fmt = "XS"
+      xs_ruler.fmt_x = ""
+      xs_ruler.fmt_y = ""
+      xs_ruler.style = RBA::Annotation::StyleArrowBoth
+      RBA::Annotation::register_template(xs_ruler, "XSection")
+    end
+    
   end
   
 end

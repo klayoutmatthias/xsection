@@ -416,11 +416,11 @@ module XS
     end
   
     # The basic generation method
-    def run(p1, p2)
+    def run(p1, p2, cv)
   
       @target_view = nil
   
-      setup(p1, p2)
+      setup(p1, p2, cv)
   
       update_basic_regions
   
@@ -445,19 +445,10 @@ module XS
   
     end
   
-    def setup(p1, p2)
+    def setup(p1, p2, cv)
   
       # locate the layout and the (single) ruler
       app = RBA::Application.instance
-      view = app.main_window.current_view
-      if !view
-        raise("No view open for creating the cross section from")
-      end
-  
-      cv = view.cellview(view.active_cellview_index)
-      if ! cv.is_valid?
-        raise("The selected layout is not valid")
-      end
   
       @cv = cv
       @layout = cv.layout

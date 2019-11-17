@@ -89,12 +89,12 @@ nd = diffuse(0.1, -0.05, :into => [nldd, pbulk], :through => gox, :mode => :roun
 etch(0.02, :into => [gox, ox1])
 
 # deposit isolation
-iso = deposit(0.5, 0.5, :mode => :round)
+iso = deposit(0.7, 0.7, :mode => :round)
 output("400/0", iso) # for demonstration
 
 # etch the gate and source/drain contacts
 # "taper" will make the holes conical with a sidewall angle of 5 degree.
-mask(lcg).etch(0.8, :into => iso, :taper => 5)
+mask(lcg).etch(1.0, :into => iso, :taper => 4)
 
 # fill with tungsten to form the plugs
 w = deposit(0.15, 0.15)
@@ -104,7 +104,7 @@ w = deposit(0.15, 0.15)
 # Alternative specifications are: 
 #   :downto => {material(s)}   planarize down to these materials
 #   :to => z                   planarize to the given z position measured from 0 (the initial wafer surface) 
-planarize(:into => [w, iso], :less => 0.45)
+planarize(:into => [w, iso], :less => 0.65)
 
 # m1 isolation and etch, metal deposition and CMP 
 iso2 = deposit(0.2)

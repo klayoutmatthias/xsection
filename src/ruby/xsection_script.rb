@@ -13,6 +13,36 @@
 module XS
 
   # ----------------------------------------------------------------
+  # A special action to implement the cross section MRU menu item
+  
+  class XSectionMRUAction < RBA::Action
+  
+    def initialize(&action)
+      @action = action
+    end
+  
+    def triggered 
+      @action.call(self) 
+    end
+  
+    def script=(s)
+      @script = s
+      self.visible = (s != nil)
+      if s
+        self.title = File.basename(s) 
+      end
+    end
+  
+    def script
+      @script
+    end
+  
+  private
+    @action
+    @script
+  end
+  
+  # ----------------------------------------------------------------
   # The cross section script environment
   
   class XSectionScriptEnvironment
@@ -126,37 +156,55 @@ module XS
     def run_script(fn, p1 = nil, p2 = nil)
   
       begin
+      
+        pts = []
+
+        app = RBA::Application.instance
+        view = app.main_window.current_view
+        if !view
+          raise("No view open for creating the cross section from")
+        end
+    
+        cv = view.cellview(view.active_cellview_index)
+        if ! cv.is_valid?
+          raise("The selected layout is not valid")
+        end
+          
+        if p1 && p2
+        
+          # take the given line
+          pts << [ p1, p2 ]
+          
+        else
   
-        if !p1 || !p2
-  
-          # locate the layout and the (single) ruler
-          app = RBA::Application.instance
-          view = app.main_window.current_view
-          if !view
-            raise("No view open for creating the cross section from")
-            return
-          end
-  
-          ruler = nil
-          nrulers = 0
+          # if there is at least one ruler with category "XS", use
+          # rulers from there
+          any_xs = nil
+          xs_rulers = []
           view.each_annotation do |a|
-            ruler = a
-            nrulers += 1
+            is_xs = (a.category == "XS")
+            if is_xs
+              xs_rulers << a
+              any_xs = true
+            end
           end
-  
-          if nrulers == 0
-            raise("No ruler present for the cross section line")
+
+          if ! any_xs          
+            view.each_annotation do |a|
+              xs_rulers << a
+            end
           end
-          if nrulers > 1
-            raise("More than one ruler present for the cross section line")
+          
+          pts = xs_rulers.collect { |a| [ a.p1, a.p2 ] }
+          if pts.size == 0
+            raise("No (valid) ruler present for the cross section line")
           end
-  
-          p1 = ruler.p1
-          p2 = ruler.p2
   
         end
   
-        XSectionGenerator.new(fn).run(p1, p2)
+        pts.each do |pp|
+          XSectionGenerator.new(fn).run(*pp, cv)
+        end
   
       # Without this rescue block stack traces are shown (for development)
       rescue => ex
