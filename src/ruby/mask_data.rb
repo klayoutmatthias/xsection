@@ -260,41 +260,21 @@ module XS
       end
   
       # compute the surface edges in me
-      me = compute_surface_edges(mp, enabled_by, 0)
+      me = compute_surface_edges(mp, enabled_by)
   
-      # produce the same edges in a sized variant ("sized" speaking for the original materials for 
-      # use with the full kernel
-      if pi > 0
-        me_sized = compute_surface_edges(mp, enabled_by, pi)
-      else
-        me_sized = me
-      end
+      if taper 
       
-      if taper && xyi > 0
+        kpl = []
+        kpl << RBA::Point::new(0, -zi)
+        kpl << RBA::Point::new(-xyi, 0)
+        kpl << RBA::Point::new(0, zi)
+
+      elsif xyi <= 0 || mode == :square
   
-        kernel_pts = []
-        kernel_pts << RBA::Point::new(-xyi, 0)
-        kernel_pts << RBA::Point::new(0, zi)
-        kernel_pts << RBA::Point::new(xyi, 0)
-        kernel_pts << RBA::Point::new(0, -zi)
-  
-        d = produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
-  
-      elsif xyi <= 0
-  
-        d = RBA::Region::new
-  
-        # TODO: there is no way to do that with a Minkowsky sum currently
-        # since polygons cannot be lines except through dirty tricks
-        dz = RBA::Point::new(0, zi)
-        me.each do |e| 
-          d.insert(RBA::Polygon::new([ e.p1 - dz, e.p2 - dz, e.p2 + dz, e.p1 + dz ]))
-        end
-        if pi != 0
-          d.size(-pi, 0, 2)
-        end
-        d.merge
-  
+        kpl = []
+        kpl << RBA::Point::new(-xyi, -zi)
+        kpl << RBA::Point::new(-xyi, zi)
+        
       elsif mode == :round || mode == :octagon
   
         # approximate round corners by 64 points (or less when in the order of delta_dbu) for "round" 
@@ -307,29 +287,28 @@ module XS
         else
           n = 8
         end
-        da = 2.0 * Math::PI / n
+        nhalf = (n + 1) / 2
+        da = Math::PI / nhalf
         rf = 1.0 / Math::cos(da * 0.5)
-        kernel_pts = []
-        n.times do |i|
-          kernel_pts << RBA::Point::from_dpoint(RBA::DPoint::new(xyi * rf * Math::cos(da * (i + 0.5)), zi * rf * Math::sin(da * (i + 0.5))))
+
+        # produce a semi-circle for the left half        
+        kpl = []
+        kpl << RBA::Point::from_dpoint(RBA::DPoint::new(0, -zi * rf))
+        (nhalf - 1).times do |i|
+          p = RBA::Point::from_dpoint(RBA::DPoint::new(-xyi * rf * Math::sin(da * (i + 0.5)), -zi * rf * Math::cos(da * (i + 0.5))))
+          kpl << p
         end
-  
-        d = produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
-  
-      elsif mode == :square
-  
-        kernel_pts = []
-        kernel_pts << RBA::Point::new(-xyi, -zi)
-        kernel_pts << RBA::Point::new(-xyi, zi)
-        kernel_pts << RBA::Point::new(xyi, zi)
-        kernel_pts << RBA::Point::new(xyi, -zi)
-  
-        d = produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
-  
+        kpl << RBA::Point::from_dpoint(RBA::DPoint::new(0, zi * rf))
+        
       else
-        d = RBA::Region::new
+        return []
       end
-  
+      
+      kpl = kpl.collect { |p| p }
+      kpl += kpl.collect { |p| RBA::Point::new(-p.x, -p.y) }
+
+      d = MaskData.compute_convolved_edges(me, kpl, pi)
+
       if (buried || 0.0).abs > 1e-6
         t = RBA::Trans::new(RBA::Point::new(0, -(buried / @xs.dbu + 0.5).floor.to_i))
         d.transform(t)
@@ -346,116 +325,282 @@ module XS
       return poly
   
     end
-  
-    # Produces the edges "sized" with the kernel given by "kernel_pts"
-    # As the requirement is to provide "negative kernels" which actually
-    # take away layout from the original geometry, we provide the input
-    # geometry "pre-shrinked" (negative sizing in horizontal direction).
-    # This pre-shrink size is "pi" and the corresponding edges are in 
-    # "me_sized". 
-    # Pre-shrinking will remove small features which we have to add again. 
-    # For this purpose, the original, non-shrinked edges are supplied with 
-    # "me". We compute their contributions by applying the kernel per-edge
-    # and shrink with pi also per-edge. Later we join these contributions
-    # with the original.
-    def produce_edges_with_kernel(me, me_sized, kernel_pts, pi)
+
+    # Produces the edges with a a kernel - that is a "pen" which 
+    # is moved along the edges. The pen is formed by the kernel points.
+    # The kernel needs to be symmetric: the second half needs to be 
+    # a x-mirrored copy of the first half. Each half needs to be a 
+    # convex half-contour.
+    def self.produce_edges_with_kernel(me, kernel_pts)
     
       d = RBA::Region::new
-    
-      kp = RBA::SimplePolygon::new
-      kp.set_points(kernel_pts, true)  # "raw" - don't optimize away
-  
-      me_sized.each do |e| 
-        d.insert(kp.minkowsky_sum(e, false))
-      end
-      
-      if pi > 0
-      
-        # add contributions from the original edges, but sized after folding with
-        # the kernel. This will provide feature contributions from parts which are
-        # smaller than the kernel's width. To avoid small-segment artefacts we 
-        # stitch edges before we do the computation
-        
-        MaskData.stitch_edges(me).each do |e| 
-          pe = kp.minkowsky_sum(e, false)
-          pe_sized = @ep.size_to_polygon([ pe ], -pi, 0, 2, true, true)
-          pe_sized.each do |p|
-            d.insert(p)
-          end
+
+      me.each do |e|
+        ep = MaskData.produce_edge_with_kernel(e, kernel_pts)
+        ep.each do |p|
+          d.insert(p)
         end
-        
       end
-        
+      
       d.merge
       d
     
     end
-    
-    # produces joined edges from a set of edges
-    # From a set of edges [p1,q1],[q1,q2],..[qn,p2]
-    # produce a single edge [p1,p2]. This method accepts 
-    # many edges and joins as many as possible.
-    # This method assumes each point is only taken once
-    # for p1 and once for p2.
-    def self.stitch_edges(me)
-    
-      me_stitched = []
 
-      p1_to_e = {}
-      p2_to_e = {}
-      me.each do |e| 
-        p1_to_e[e.p1] = e 
-        p2_to_e[e.p2] = e 
+    # produce a single edge with kernel
+    def self.produce_edge_with_kernel(e, kernel_pts)
+
+      if e.dy < 0
+        e = e.dup
+        e.swap_points
+      end
+      p1 = e.p1
+      p2 = e.p2
+          
+      n = kernel_pts.size
+
+      imax = nil
+      dmax = nil
+      (n / 2).times do |i|
+        p = kernel_pts[i]
+        d = e.distance(p)
+        if !dmax || dmax < d
+          imax = i
+          dmax = d
+        end
+      end
+
+      pts = []
+      
+      i = (imax + n / 2) % n
+      (n / 2 + 1).times do
+        pts << kernel_pts[i] + p1
+        i = (i + 1) % n
+      end
+      i = imax
+      (n / 2 + 1).times do
+        pts << kernel_pts[i] + p2
+        i = (i + 1) % n
       end
       
-      p1_to_e.each do |p1,e|
-        if e && !p2_to_e[p1]
-          ee = e.dup
-          while en = p1_to_e[ee.p2]
-            p1_to_e[ee.p2] = nil
-            ee.p2 = en.p2
-          end
-          me_stitched << ee
+      ep = RBA::EdgeProcessor::new
+      ep.simple_merge_p2p([ RBA::Polygon::new(pts) ], false, false, 1)
+        
+    end
+    
+    # Computes the convolution of the edge sequence with the kernel 
+    # (an array of points). After the convolution, a horizontal negative
+    # bias (pi, a positive value) is applied. This allows implementation
+    # of "negative" kernels. "valley" or "hill" edge combinations receive a special
+    # treatment to avoid merging kernels.
+    def self.compute_convolved_edges(me, kernel_pts, pi)
+    
+      ess = MaskData.stitch_edges(me)
+      
+      d = RBA::Region::new
+      ess.each do |es|
+        d += MaskData.compute_convolved_edges_from_sequence(es, kernel_pts, pi)
+      end
+      
+      d
+    
+    end
+    
+    # Computes the convolved edge sequence
+    def self.compute_convolved_edges_from_sequence(es, kernel_pts, pi)
+
+      dead = MaskData.insert_dead_intervals(es, pi)
+      
+      kp = RBA::SimplePolygon::new(kernel_pts, true) # "raw mode"
+      
+      sum = RBA::Region::new
+      es.each do |e|
+        sum.insert(kp.minkowsky_sum(e, false))
+      end
+        
+      if pi != 0
+        sum = sum.sized(-pi, 0, 2)
+      else
+        sum.merge
+      end
+      
+      MaskData.remove_dead_intervals(sum, dead)
+      
+    end
+    
+    # Computes the dead intervals and modifies the edge sequence accordingly
+    def self.insert_dead_intervals(me, pi)
+    
+      if me.size < 3 || pi <= 0
+        return []
+      end
+      
+      # order the edges such that we have a left-to-right order
+      if me[0].p1.x > me[-1].p2.x
+        me_org = me.dup
+        me.clear
+        me_org.reverse.each do |e|
+          e = e.dup
+          e.swap_points
+          me << e
         end
       end
       
-      me_stitched
+      # keeps valley or hill edge indexes
+      vorh = {}
+      
+      # insert dummy edges for later expansion at valley or hill *points*
+      me_org = me.dup
+      me.clear
+      (me_org.size - 1).times do |i|
+        ebefore = me_org[i]
+        eafter = me_org[i + 1]
+        me << ebefore
+        if ebefore.dy * eafter.dy < 0
+          # valley or hill point
+          vorh[me.size] = true
+          me << RBA::Edge::new(ebefore.p2, eafter.p1) # same points :)
+        end
+      end
+      me << me_org[-1]
+      
+      # identify valley or hill *edges*
+      (me.size - 2).times do |i|
+        ebefore = me[i]
+        e = me[i + 1]
+        eafter = me[i + 2]
+        if e.dy == 0 && ebefore.dy * eafter.dy < 0
+          vorh[i + 1] = true
+        end
+      end
+      
+      int = []
+
+      stretch = 2 * pi
+      
+      s = 0
+      me.each_with_index do |e,i|
+        sv = RBA::Vector::new(s, 0)
+        e.p1 = e.p1 + sv
+        e.p2 = e.p2 + sv
+        if vorh[i]
+          xs = (e.p1.x + e.p2.x) / 2
+          s += stretch
+          int << [ xs, xs + stretch ]
+          e.p2 = e.p2 + RBA::Vector::new(stretch, 0)
+        end
+      end
+
+      int
     
     end
-
+    
+    # Removes the dead intervals
+    # This is a special coordinate transformation which removes an 
+    # interval [a,b] from x by doing
+    #   x = x for x<=(a+b)/2
+    #   x = x-(b-a) otherwise
+    # This method acts on a region and returns a merged region
+    def self.remove_dead_intervals(data, dead)
+    
+      # shortcut
+      if dead.empty?
+        return data
+      end
+      
+      pp = []
+      data.each do |p|
+        pp << p
+      end
+      
+      dead.reverse.each do |int|
+        
+        xm = (int[0] + int[1]) / 2
+        dx = int[1] - int[0]
+              
+        pp_next = []
+        pp.each do |p|
+        
+          hp = []
+          p.each_point_hull do |pt|
+            hp << RBA::Point::new(pt.x > xm ? pt.x - dx : pt.x, pt.y)
+          end
+          
+          pn = RBA::Polygon::new(hp, true)
+          pp_next << pn
+          
+          p.holes.times do |h|
+            hp = []
+            p.each_point_hole(h) do |pt|
+              hp << RBA::Point::new(pt.x > xm ? pt.x - dx : pt.x, pt.y)
+            end
+            pn.insert_hole(hp, true)
+          end
+      
+        end
+        
+        pp = pp_next
+      
+      end
+      
+      d = RBA::Region::new(pp)
+      d.merge
+      d
+      
+    end
+    
+    # Stitches the edge sequence into a sequence of consecutive edges
+    # Returns an array of arrays of edges (the latter being 
+    # in consecutive order - that is, their end- and start point 
+    # is identical)
+    def self.stitch_edges(me)
+    
+      seq = []
+      
+      p1_to_e = {}
+      p2_to_e = {}
+      me.each do |e|
+        if e.p1 != e.p2
+          p1_to_e[e.p1] = e
+          p2_to_e[e.p2] = e
+        end
+      end
+      
+      me.each do |e|
+      
+        if !p2_to_e[e.p1]
+          # a new start of a sequence
+          s = []
+          s << e
+          while ee = p1_to_e[e.p2]
+            p1_to_e[e.p2] = nil
+            s << ee
+            e = ee
+          end
+          seq << s
+        end
+        
+      end
+      
+      seq
+    
+    end
+    
     # computes the surface edges (the interface between air and some material)
     # "enabled_by" is a material object which needs to touch with the surface
     # in order to enable it. "pi" is a prebias which is applied to the air and
     # enabling material to shrink the contours for later application of a full
     # kernel.
-    def compute_surface_edges(mp, enabled_by, pi)
+    def compute_surface_edges(mp, enabled_by)
 
-      if pi > 0
+      # compute the surface edges in me    
+      ap_masked = @ep.safe_boolean_to_polygon(mp, @air_polygons, RBA::EdgeProcessor::mode_and, true, true)
+      me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp)))
       
-        ap_sized = @ep.size_to_polygon(@air_polygons, -pi, 0, 2, true, true)
-        mp_sized = @ep.size_to_polygon(mp, -pi, 0, 2, true, true)
-        ap_masked = @ep.safe_boolean_to_polygon(ap_sized, mp_sized, RBA::EdgeProcessor::mode_and, true, true)
-        me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp_sized.empty? ? RBA::Edges::new : RBA::Edges::new(mp_sized)))
-  
-        # consider enabling me_sized edges with "into", "on" or "through" ..
-        if enabled_by
-          enabled_by_sized = @ep.size_to_polygon(enabled_by, -pi, 0, 2, true, true)
-          en_masked_sized = @ep.safe_boolean_to_polygon(mp_sized, enabled_by_sized, RBA::EdgeProcessor::mode_anotb, true, true)
-          me &= RBA::Region::new(en_masked_sized).sized(@xs.delta_dbu)
-        end
-      
-      else 
-      
-        # compute the surface edges in me    
-        ap_masked = @ep.safe_boolean_to_polygon(mp, @air_polygons, RBA::EdgeProcessor::mode_and, true, true)
-        me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp)))
-        
-        # consider enabling the surface edges with "into", "on" or "through" ..
-        if enabled_by
-          en_masked = @ep.safe_boolean_to_polygon(mp, enabled_by, RBA::EdgeProcessor::mode_anotb, true, true)
-          me &= RBA::Region::new(en_masked).sized(@xs.delta_dbu)
-        end
-        
+      # consider enabling the surface edges with "into", "on" or "through" ..
+      if enabled_by
+        en_masked = @ep.safe_boolean_to_polygon(mp, enabled_by, RBA::EdgeProcessor::mode_and, true, true)
+        me &= RBA::Region::new(en_masked).sized(@xs.delta_dbu)
       end
       
       me

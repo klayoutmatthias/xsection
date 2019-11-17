@@ -58,6 +58,7 @@ nwell = mask(lwn).grow(0.5, -0.05, :mode => :round, :into => pbulk)
 # "bias" will shrink the resulting area.
 mfox = mask(lfox)
 fox1 = mfox.grow(0.2, 0.2, :bias => 0.1, :mode => :round)
+
 fox2 = mfox.grow(0.2, 0.2, :bias => 0.1, :mode => :round, :into => [pbulk, nwell])
 fox = fox1.or(fox2)
 
