@@ -26,7 +26,7 @@
 # GNU General Public License for more details.
 #
 
-require("xsection")
+require_relative("../ruby/xsection")
 
 module XS
 

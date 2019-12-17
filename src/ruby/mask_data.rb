@@ -238,7 +238,7 @@ module XS
       bi = ((bias || 0.0) / @xs.dbu + 0.5).floor.to_i
       if bi != 0
         # for backward compatibility the bias is inverse
-        mp = @ep.size_to_polygon(@mask_polygons, -bi, 2, true, true)
+        mp = @ep.size_to_polygon(@mask_polygons, -bi, 0, 2, true, true)
       else
         mp = @mask_polygons
       end
@@ -282,7 +282,7 @@ module XS
         # nmin is the minimum number of points required to achieve a resolution of delta_dbu for
         # the circle.
         if mode == :round
-          nmin = (Math::PI * Math::sqrt(0.5 * [xyi, zi].max.to_f / @xs.delta_dbu.to_f) + 0.9).to_i
+          nmin = (Math::PI * Math::sqrt([xyi, zi].max.to_f / @xs.delta_dbu.to_f) + 0.9).to_i
           n = [ 64, [ nmin, 8 ].max ].min
         else
           n = 8
@@ -293,12 +293,11 @@ module XS
 
         # produce a semi-circle for the left half        
         kpl = []
-        kpl << RBA::Point::from_dpoint(RBA::DPoint::new(0, -zi * rf))
-        (nhalf - 1).times do |i|
+        kpl << RBA::Point::from_dpoint(RBA::DPoint::new(0, -zi))
+        nhalf.times do |i|
           p = RBA::Point::from_dpoint(RBA::DPoint::new(-xyi * rf * Math::sin(da * (i + 0.5)), -zi * rf * Math::cos(da * (i + 0.5))))
           kpl << p
         end
-        kpl << RBA::Point::from_dpoint(RBA::DPoint::new(0, zi * rf))
         
       else
         return []

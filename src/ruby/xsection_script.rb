@@ -202,9 +202,13 @@ module XS
   
         end
   
+        new_view = nil
+        
         pts.each do |pp|
-          XSectionGenerator.new(fn).run(*pp, cv)
+          new_view = XSectionGenerator.new(fn).run(*pp, cv)
         end
+        
+        new_view
   
       # Without this rescue block stack traces are shown (for development)
       rescue => ex
