@@ -480,9 +480,9 @@ module XS
       
       end
       
-      d = RBA::Region::new(pp)
-      d.merge
-      d
+      ep = RBA::EdgeProcessor::new
+      pp_merged = ep.simple_merge_p2p(pp, false, true, 1)
+      RBA::Region::new(pp_merged)
       
     end
     
