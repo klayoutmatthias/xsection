@@ -108,6 +108,10 @@ grow(0.3, 0.1, :mode => :round)
 
 ![g10_xs](g10_xs.png)
 
+Trenches are filled at the bottom while small trenches are filled entirely:
+
+![g11_xs](g11_xs.png)
+
 ## <tt>:on</tt> - growing on specific material
 
 The :on option allows to select growth on a material surface in addition to selection by a mask. To do so, specify the array of materials or the single material on which the new material will be deposited. The surface of these substrate materials will form the seed of the growth process.
