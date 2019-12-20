@@ -6,12 +6,14 @@
 # - W plug creating and W CMP
 # - First metal layer formation
 
+# Pick a 10x finer database unit for enhanced accuracy:
+dbu(dbu * 0.1)
+
 # Basic options: declare the depth of the simulation and the height.
 # These are the defaults:
 #   depth(2.0)
 #   height(2.0)
 # Declare the basic accuracy used to remove artefacts for example:
-dbu(0.0001)
 delta(5 * dbu)
 
 # Declaration the layout layers.

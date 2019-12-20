@@ -17,6 +17,7 @@ The following standalone functions are available:
 | <tt>all</tt> | A pseudo-mask, covering the whole wafer |
 | <tt>below(<i>b</i>)</tt> | Configures the lower height of the processing window for backside processing (see below) |
 | <tt>bulk</tt> | A pseudo-material describing the wafer body |
+| <tt>dbu(<i>d</i>)</tt> | Configures the computation database unit (see below) |
 | <tt>delta(<i>d</i>)</tt> | Configures the accuracy parameter (see below) |
 | <tt>deposit(<i>...</i>)</tt> (synonyms: grow, diffuse) | Deposits material as a uniform sheet. Equivalent to <tt>all.grow(<i>...</i>)</tt>. Gives a material data object |
 | <tt>depth(<i>d</i>)</tt> | Configures the depth of the processing window or the wafer thickness for backside processing (see below) |
@@ -50,11 +51,48 @@ mask(layer).etch(0.5, :into => substrate)
 output("1/0", substrate)
 ```
 
+### <tt>dbu</tt> method
+
+The cross section generator is based on polygon operations which are performed in an integer-coordinate
+space. The "database unit" is the multiplier which turns integer coordinates into physical coordinates - i.e.
+the resolution of the algorithm. 
+
+By default, this resolution is taken from the input layout. To achieve a higher resolution, you can choose
+a finer database unit for the computation of the material geometries. Use "dbu" with a value to set the 
+computation database unit in micrometer units:
+
+```ruby
+dbu(0.0001)
+```
+
+will set the computation DBU to 0.1 nm (0.0001 micrometer). 
+
+Using "dbu" without a value will return the current computation database unit, so to decrease the DBU
+to a tenth you can use:
+
+```ruby
+dbu(0.1 * dbu)
+```
+
+It's recommended to put a DBU modication statement before all other statements in the script.
+If the database unit should is made too small, coordinate overflow may happen. 
+
 ### <tt>delta</tt> method
 
-Due to limitations of the underlying processor which cannot handle infinitely thin polygons, there is an accuracy limit for the creation or modification or geometrical regions. The delta parameter will basically determine that accuracy level and in some cases, for example the sheet thickness will only be accurate to that level. In addition, healing or small gaps and slivers during the processing uses the delta value as a dimension threshold, so shapes or gaps smaller than that value cannot be produced. 
+Due to limitations of the underlying processor which cannot handle infinitely thin polygons, there 
+is an accuracy limit for the creation or modification or geometrical regions. The delta parameter 
+will basically determine that accuracy level and in some cases, for example the sheet thickness 
+will only be accurate to that level. 
 
-The default value of "delta" is 10 database units. To modify the value, call the "delta" function with the desired delta value in micrometer units. The minimum value recommended is 2 database unit. That implies that the accuray can be increased by using a smaller database unit for the input layout.
+In addition, healing or small gaps and slivers during the processing uses the delta value as a dimension 
+threshold, so shapes or gaps smaller than this value cannot be produced. 
+
+The default value of "delta" is 10 database units. To modify the value, call the "delta" function 
+with the desired delta value in micrometer units. The minimum value recommended is 2 database unit. 
+That implies that the accuray can be increased by using a smaller database unit for the input layout.
+
+If you wish to increase the accuracy, you can also use the "dbu" function to set a smaller computation
+database unit.
 
 ### <tt>deposit</tt> (<tt>grow</tt>, <tt>diffuse</tt>) method
 
