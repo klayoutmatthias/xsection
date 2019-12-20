@@ -11,6 +11,7 @@
 #   depth(2.0)
 #   height(2.0)
 # Declare the basic accuracy used to remove artefacts for example:
+dbu(0.0001)
 delta(5 * dbu)
 
 # Declaration the layout layers.
