@@ -102,7 +102,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -253,7 +253,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -429,7 +429,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -598,7 +598,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -746,7 +746,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -894,7 +894,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1042,7 +1042,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1190,7 +1190,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1338,7 +1338,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1486,7 +1486,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1625,7 +1625,7 @@ depth(1)
 # Prepare input layers
 m1 = layer("1/0")
 
-metal = mask(m1).grow(0.3, :taper => 10, :bias => -0.1)
+metal = mask(m1).grow(0.3, 0.1, :taper => 10)
 
 # output the material data to the target layout
 output("0/0", bulk)
@@ -1634,7 +1634,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1784,7 +1784,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1946,7 +1946,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2114,7 +2114,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2286,7 +2286,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2426,7 +2426,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2579,7 +2579,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2718,7 +2718,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2852,7 +2852,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3000,7 +3000,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3148,7 +3148,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3296,7 +3296,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3444,7 +3444,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3592,7 +3592,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3740,7 +3740,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3880,7 +3880,7 @@ depth(1)
 m1 = layer("1/0")
 
 substrate = bulk
-mask(m1).etch(0.3, :taper => 10, :bias => -0.1, :into => substrate)
+mask(m1).etch(0.3, 0.1, :taper => 10, :into => substrate)
 
 # output the material data to the target layout
 output("0/0", substrate)
@@ -3888,7 +3888,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4052,7 +4052,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4224,7 +4224,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4376,7 +4376,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4514,7 +4514,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
