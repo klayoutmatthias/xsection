@@ -54,18 +54,27 @@ module XS
       mw || return
   
       @action = RBA::Action.new
-      @action.title = "XSection Script"
+      @action.title = "Run Script"
       @action.on_triggered do
   
-        view = RBA::Application.instance.main_window.current_view
-        if !view
-          raise "No view open for running the xsection script on"
-        end
-          
-        fn = RBA::FileDialog::get_open_file_name("Select Script", "", "XSection Scripts (*.xs);;All Files (*)");
-        if fn.has_value?
-          run_script(fn.value)
-          make_mru(fn.value)
+        begin
+        
+          view = RBA::Application.instance.main_window.current_view
+          if !view
+            raise "No view open for running the xsection script on"
+          end
+            
+          fn = RBA::FileDialog::get_open_file_name("Select Script", "", "XSection Scripts (*.xs);;All Files (*)");
+          if fn.has_value?
+            begin
+              run_script(fn.value)
+            ensure
+              make_mru(fn.value)
+            end
+          end
+
+        rescue => ex
+          RBA::MessageBox.critical("Error", ex.to_s, RBA::MessageBox.b_ok)
         end
   
       end
@@ -74,37 +83,47 @@ module XS
       @active_tech.title = "XSection: Active Technolgy"
       @active_tech.shortcut = "Ctrl+Shift+X"
       @active_tech.on_triggered do
+      
+        begin
   
-        view = RBA::Application.instance.main_window.current_view
-        if !view
-          raise "No view open for running the xsection script on"
-        end
-        tech_name = view.active_cellview.technology
-        tech = RBA::Technology.technology_by_name(tech_name)
-        xsect_dir = File.join(tech.base_path, 'xsect')
-        unless File.exist?(xsect_dir)
-          raise "No Xsection directory present for #{tech_name}"
-        end
-        xsect_fileglob = File.join(xsect_dir, '*.xs')
-  
-        files = []
-        Dir.glob(xsect_fileglob) do |xs_file|
-          files << xs_file.to_s
-        end
-        if files.length < 1
-          raise "No XSection file found for technology #{tech_name}."
-        elsif files.length > 1
-          raise "More than one .xs file found for technology #{tech_name}. Found #{files.length}"
-        else
-          xs_file = files[0]
-          run_script(xs_file)
+          view = RBA::Application.instance.main_window.current_view
+          if !view
+            raise "No view open for running the xsection script on"
+          end
+          tech_name = view.active_cellview.technology
+          tech = RBA::Technology.technology_by_name(tech_name)
+          xsect_dir = File.join(tech.base_path, 'xsect')
+          unless File.exist?(xsect_dir)
+            raise "No Xsection directory present for #{tech_name}"
+          end
+          xsect_fileglob = File.join(xsect_dir, '*.xs')
+    
+          files = []
+          Dir.glob(xsect_fileglob) do |xs_file|
+            files << xs_file.to_s
+          end
+          if files.length < 1
+            raise "No XSection file found for technology #{tech_name}."
+          elsif files.length > 1
+            raise "More than one .xs file found for technology #{tech_name}. Found #{files.length}"
+          else
+            xs_file = files[0]
+            run_script(xs_file)
+          end
+
+        rescue => ex
+          RBA::MessageBox.critical("Error", ex.to_s, RBA::MessageBox.b_ok)
         end
   
       end
   
       menu = mw.menu
+      
+      # remove any existing menu
+      menu.delete_item("tools_menu.xsection_script_submenu")
+      
       menu.insert_separator("tools_menu.end", "xsection_script_group")
-      menu.insert_menu("tools_menu.end", "xsection_script_submenu", "XSection Scripts")
+      menu.insert_menu("tools_menu.end", "xsection_script_submenu", "XSection #{XS::VERSION} Scripts")
       menu.insert_item("tools_menu.xsection_script_submenu.end", "xsection_script_load", @action)
       menu.insert_item("tools_menu.xsection_script_submenu.end", "xsection_for_technology", @active_tech)
       menu.insert_separator("tools_menu.xsection_script_submenu.end.end", "xsection_script_mru_group")
@@ -113,8 +132,13 @@ module XS
       (1..10).each do |i|
   
         a = XSectionMRUAction.new do |action|
-          run_script(action.script)
-          make_mru(action.script)
+          begin
+            run_script(action.script)
+          rescue => ex
+            RBA::MessageBox.critical("Error", ex.to_s, RBA::MessageBox.b_ok)
+          ensure
+            make_mru(action.script)
+          end
         end
   
         @mru_actions.push(a)
@@ -210,28 +234,20 @@ module XS
         
         new_view
   
-      # Without this rescue block stack traces are shown (for development)
       rescue => ex
         
-        if $xs_run || $xs_debug
-          raise ex
-        else
-  
-          # Extract the error location in the script.
-          # The backtrace line is something like "(filename).xs:(line):in ...".
-  
-          location = "(not found)"
-          ex.backtrace.each do |bt|
-            if !bt.to_s.start_with?(File.dirname(__FILE__))
-              location = bt.sub(/:in .*$/, "")
-              break
-            end
+        # Extract the error location in the script and add to the error message
+        # The backtrace line is something like "(filename).xs:(line):in ...".
+
+        location = "(not found)"
+        ex.backtrace.each do |bt|
+          if !bt.to_s.start_with?(File.dirname(__FILE__))
+            location = bt.sub(/:in .*$/, "")
+            break
           end
-  
-          RBA::MessageBox.critical("Error", ex.to_s + "\nin " + location, RBA::MessageBox.b_ok)
-          nil
-  
         end
+        
+        raise ex.to_s + "\nin " + location
   
       end
   

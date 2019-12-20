@@ -30,6 +30,9 @@ require_relative("../ruby/xsection")
 
 module XS
 
+  # UPDATE THE VERSION NUMBER ON EACH RELEASE HERE
+  VERSION = "1.4"
+
   @xsection_processing_environment = XSectionScriptEnvironment.new
   
   # trigger batch-mode actions
