@@ -537,7 +537,7 @@ module XS
       # consider enabling the surface edges with "into", "on" or "through" ..
       if enabled_by
         en_masked = @ep.safe_boolean_to_polygon(mp, enabled_by, RBA::EdgeProcessor::mode_and, true, true)
-        me &= RBA::Region::new(en_masked).sized(@xs.delta_dbu)
+        me &= RBA::Region::new(en_masked).sized(0, @xs.delta_dbu, 2)
       end
       
       me

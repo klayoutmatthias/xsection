@@ -6,6 +6,9 @@
 # - W plug creating and W CMP
 # - First metal layer formation
 
+# Pick a 10x finer database unit for enhanced accuracy:
+dbu(dbu * 0.1)
+
 # Basic options: declare the depth of the simulation and the height.
 # These are the defaults:
 #   depth(2.0)

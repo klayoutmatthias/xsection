@@ -60,6 +60,9 @@ module XS
     end
   
     def load(layout, cell, box, layer_spec)
+    
+      box_in_layout = box * (@xs.dbu / layout.dbu)
+      scale = RBA::ICplxTrans::new(layout.dbu / @xs.dbu)
   
       ls = XS::string_to_layerinfo(layer_spec)
   
@@ -74,12 +77,12 @@ module XS
       # collect polygons from the specified layer
       if (layer_index)
   
-        shape_iter = layout.begin_shapes_touching(cell, layer_index, box)
+        shape_iter = layout.begin_shapes_touching(cell, layer_index, box_in_layout)
         while !shape_iter.at_end
   
           shape = shape_iter.shape
           if shape.is_polygon? || shape.is_path? || shape.is_box?
-            @polygons.push(shape.polygon.transformed(shape_iter.trans))
+            @polygons.push(shape.polygon.transformed(scale * shape_iter.trans))
           end
   
           shape_iter.next
