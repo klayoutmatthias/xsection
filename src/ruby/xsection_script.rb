@@ -177,7 +177,7 @@ module XS
   
     end
   
-    def run_script(fn, p1 = nil, p2 = nil)
+    def run_script(fn, p1 = nil, p2 = nil, batch = false)
   
       begin
       
@@ -229,7 +229,7 @@ module XS
         new_view = nil
         
         pts.each do |pp|
-          new_view = XSectionGenerator.new(fn).run(*pp, cv)
+          new_view = XSectionGenerator.new(fn, batch).run(*pp, cv)
         end
         
         new_view

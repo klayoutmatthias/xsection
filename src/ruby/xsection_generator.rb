@@ -36,13 +36,14 @@ module XS
   class XSectionGenerator
   
     # Constructor
-    def initialize(file_path)
+    def initialize(file_path, batch)
   
       @file_path = file_path
       @lyp_file = nil
       @ep = RBA::EdgeProcessor.new
       @flipped = false
       @dbu = 0.001
+      @batch = batch
   
     end
   
@@ -61,6 +62,39 @@ module XS
       shapes.insert(d)
   
     end
+    
+    def snapshot(name = nil)
+    
+      if @batch
+        return
+      end
+    
+      name && @target_view.title = name
+      source_cell = @target_layout.cell(@target_cell)
+      
+      finish_output_view
+      prepare_output_view
+      
+      # copy what we had so far
+      @target_layout.cell(@target_cell).copy_tree(source_cell)
+    
+    end
+  
+    def pause(name = nil)
+    
+      if @batch
+        return
+      end
+    
+      name && @target_view.title = name
+      finish_output_view
+            
+      v = RBA::MessageBox::question("XSection snapshot", "New snapshot taken. Continue?", RBA::MessageBox::Yes + RBA::MessageBox::No)
+      if v != RBA::MessageBox::Yes
+        raise "XSection script processing stopped."
+      end
+
+    end
   
     def output(layer_spec, layer_data)
     
@@ -74,6 +108,7 @@ module XS
       ls = XS.string_to_layerinfo(layer_spec)
       li = @target_layout.layer(ls)
       shapes = @target_layout.cell(@target_cell).shapes(li)
+      shapes.clear
   
       # confine the shapes to the region of interest
       @ep.boolean_to_polygon([ RBA::Polygon.new(@roi) ], layer_data.data, RBA::EdgeProcessor::mode_and, true, true).each do |polygon|
@@ -433,14 +468,9 @@ module XS
       end
   
       eval(text, binding, @file_path)
-  
-      # Show all layers which were created in between
-      RBA::Application.instance.main_window.cm_lv_add_missing 
-      if @lyp_file
-        @target_view.load_layer_props(@lyp_file)
-      end
-      @target_view.zoom_fit
-  
+
+      finish_output_view
+        
       @target_view
   
     end
@@ -448,8 +478,6 @@ module XS
     def setup(p1, p2, cv)
   
       # locate the layout and the (single) ruler
-      app = RBA::Application.instance
-  
       @cv = cv
       @layout = cv.layout
       @dbu = @layout.dbu
@@ -461,13 +489,7 @@ module XS
       @line_dbu = RBA::Edge.new(p1_dbu, p2_dbu)
   
       # create a new layout for the output
-      cv = app.main_window.create_layout(1)
-      cell = cv.layout.add_cell("XSECTION")
-      @target_view = app.main_window.current_view
-      @target_view.select_cell(cell, 0)
-      @target_layout = cv.layout
-      @target_layout.dbu = @dbu
-      @target_cell = cell
+      prepare_output_view
   
       # initialize height and depth
       @extend = (2.0 / @dbu + 0.5).floor.to_i
@@ -489,7 +511,33 @@ module XS
       @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line_dbu.length + @extend, 0))], self)
       @roi = RBA::Box.new(0, -@depth - @below, @line_dbu.length, @height)
     end
+    
+    def prepare_output_view
+
+      app = RBA::Application.instance
   
+      cv = app.main_window.create_layout(1)
+      cell = cv.layout.add_cell("XSECTION")
+
+      @target_view = app.main_window.current_view
+      @target_view.select_cell(cell, 0)
+      @target_layout = cv.layout
+      @target_layout.dbu = @dbu
+      @target_cell = cell
+
+    end
+  
+    def finish_output_view
+    
+      # Show all layers which were created in between
+      RBA::Application.instance.main_window.cm_lv_add_missing 
+      if @lyp_file
+        @target_view.load_layer_props(@lyp_file)
+      end
+      @target_view.zoom_fit
+  
+    end
+
   end
 
 end
