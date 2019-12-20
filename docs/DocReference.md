@@ -28,7 +28,9 @@ The following standalone functions are available:
 | <tt>layers_file(<i>lyp_filename</i>)</tt> | Configures a .lyp layer properties file to be used on the cross-section layout |
 | <tt>mask(<i>layout_data</i>)</tt> | Designates the layout_data object as a litho pattern (mask). This is the starting point for structured grow or etch operations. Gives a mask data object. |
 | <tt>output(<i>layer_spec</i>, <i>material</i>)</tt> | Outputs a material object to the output layout |
+| <tt>pause</tt> | Stops and prompts whether to continue |
 | <tt>planarize(<i>...</i>)</tt> | Planarization |
+| <tt>snapshot</tt> | Starts a new tab |
 
 ### <tt>all</tt> method
 
@@ -117,6 +119,31 @@ output("1/0", metal)
 
 The layer specifications follow the same rules than for the "layer" function described above.
 
+An "output" call will overwrite any previous outputs on the same layer. An "output" will also 
+produce the material generated so far. So if you put "output" before an etch statement you will
+see the material before the etch.
+
+This is useful for working with "pause" or "snapshot" for debugging cross section scripts. 
+In order to produce a certain material of interest, put a corresponding "output" in front of
+the "pause" or "snapshot" call.
+
+### <tt>pause</tt> function
+
+When this function is called, the cross section script will display the material 
+data produced with "output" so far and prompt whether to continue. This is a useful 
+function for debugging.
+
+A name can be given which is copied into the tab's headline to indicate the step
+you're at.
+
+```ruby
+pause
+pause("Stopped at step #17")
+```
+
+A similar function is "snapshop" which does not stop, but saves everything in the
+current tab and continues with a new one.
+
 ### <tt>planarize</tt> method
 
 The "planarize" function removes material of the given kind ("into" argument) down to a certain level. The level can be determined numerically or by a stop layer.
@@ -137,6 +164,15 @@ The named parameters are:
 | :less | Value is a micrometer distance. Planarization will remove a horizontal alice of the given material, stopping "less" micrometers measured from the topmost point of that material before the planarization. Cannot be used together with :downto or :to. |
 | :to | Value is micrometer z value. Planarization stops when reaching that value. The z value is measured from the initial wafer surface. Cannot be used together with :downto or :less. |
 
+### <tt>snapshot</tt> method
+
+The "snapshop" method will save all materials provided with "output" so far and continue with a 
+new tab. A name can be given which will be copied to the headline of the current tab.
+
+```ruby
+snapshot
+snapshot("Step #17")
+```
 
 ## Methods on original layout layers or material data objects
 

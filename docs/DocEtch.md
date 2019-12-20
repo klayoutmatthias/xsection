@@ -84,7 +84,7 @@ etch(0.3, 0.1, :mode => :round, :bias => 0.05, :into => substrate)
 
 ![e6_xs](e6_xs.png)
 
-A special profile can be specified with the :taper option. This option specifies a taper angle and a conical trench will be created. The taper angle will be the sidewall angle of the trench. This option cannot be combined with :mode and a lateral extension:
+A special profile can be specified with the :taper option. This option specifies a taper angle and a conical trench will be created. The taper angle will be the sidewall angle of the trench. This option cannot be combined with :mode:
 
 ```ruby
 etch(0.3, :taper => 10, :into => substrate)
