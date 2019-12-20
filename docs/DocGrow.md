@@ -84,7 +84,7 @@ grow(0.3, 0.1, :mode => :round, :bias => 0.05)
 
 ![g6_xs](g6_xs.png)
 
-A special profile can be specified with the :taper option. This option specifies a taper angle and a conical patch will be created. The taper angle will be the sidewall angle of the patch. This option cannot be combined with :mode and the lateral extension should be omitted. It can be combined with :bias however:
+A special profile can be specified with the :taper option. This option specifies a taper angle and a conical patch will be created. The taper angle will be the sidewall angle of the patch. This option cannot be combined with :mode:
 
 ```ruby
 grow(0.3, :taper => 10)
@@ -107,6 +107,10 @@ grow(0.3, 0.1, :mode => :round)
 ```
 
 ![g10_xs](g10_xs.png)
+
+Trenches are filled at the bottom while small trenches are filled entirely:
+
+![g11_xs](g11_xs.png)
 
 ## <tt>:on</tt> - growing on specific material
 

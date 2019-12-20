@@ -1,4 +1,4 @@
 #!/bin/sh -e
 
-klayout -z -rm ../src/xsection.rbm -r makedoc.rb
+klayout -z -t -c ./klayoutrc -rm ../src/macros/xsection.lym -r makedoc.rb
 

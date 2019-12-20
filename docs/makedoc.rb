@@ -102,7 +102,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -253,7 +253,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -429,7 +429,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -598,7 +598,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -746,7 +746,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -894,7 +894,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1042,7 +1042,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1190,7 +1190,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1338,7 +1338,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1486,7 +1486,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1625,7 +1625,7 @@ depth(1)
 # Prepare input layers
 m1 = layer("1/0")
 
-metal = mask(m1).grow(0.3, :taper => 10, :bias => -0.1)
+metal = mask(m1).grow(0.3, 0.1, :taper => 10)
 
 # output the material data to the target layout
 output("0/0", bulk)
@@ -1634,7 +1634,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1784,7 +1784,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -1946,7 +1946,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2042,8 +2042,6 @@ view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
 
 
-if false   # does not work well
-
 # -------------------------------------------------------------------
 #  Doc grow sample 11
 
@@ -2057,13 +2055,11 @@ main_ly = main_cv.layout
 main_top = main_ly.create_cell("TOP")
 
 l1 = main_ly.layer(1, 0)
-main_top.shapes(l1).insert(RBA::Box::new(-100, -600, 800, 600))
+main_top.shapes(l1).insert(RBA::Box::new(-100, -600, 1100, 600))
 
 l2 = main_ly.layer(2, 0)
-main_top.shapes(l2).insert(RBA::Box::new(-1000, -600, 0, 600))
-
-l3 = main_ly.layer(3, 0)
-main_top.shapes(l3).insert(RBA::Box::new(600, -600, 2000, 600))
+main_top.shapes(l2).insert(RBA::Box::new(100, -600, 500, 600))
+main_top.shapes(l2).insert(RBA::Box::new(800, -600, 950, 600))
 
 ant = RBA::Annotation::new
 ant.p1 = RBA::DPoint::new(-0.5, 0)
@@ -2099,13 +2095,11 @@ depth(1)
 # Prepare input layers
 m1 = layer("1/0")
 m2 = layer("2/0")
-m3 = layer("3/0")
 
 substrate = bulk
-mask(m2).etch(0.5, :into => substrate, :taper => 30)
-mask(m3).etch(0.5, :into => substrate)
+mask(m2).etch(0.5, :into => substrate)
 
-metal = mask(m1).grow(0.3, 0.1, :taper => 20)
+metal = mask(m1).grow(0.3, 0.1, :mode => :round)
 
 # output the material data to the target layout
 output("0/0", substrate)
@@ -2114,7 +2108,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2160,22 +2154,22 @@ ant.fmt = ""
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(1.3, 0.3)
-ant.p2 = RBA::DPoint::new(1.3, 0)
+ant.p1 = RBA::DPoint::new(1.1, 0.3)
+ant.p2 = RBA::DPoint::new(1.1, 0)
 ant.style = RBA::Annotation::StyleArrowBoth
 ant.fmt = " $D"
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
 ant.p1 = RBA::DPoint::new(1.05, 0.3)
-ant.p2 = RBA::DPoint::new(1.35, 0.3)
+ant.p2 = RBA::DPoint::new(1.25, 0.3)
 ant.style = RBA::Annotation::StyleLine
 ant.fmt = ""
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
 ant.p1 = RBA::DPoint::new(1.05, 0)
-ant.p2 = RBA::DPoint::new(1.35, 0)
+ant.p2 = RBA::DPoint::new(1.25, 0)
 ant.style = RBA::Annotation::StyleLine
 ant.fmt = ""
 view.insert_annotation(ant)
@@ -2188,14 +2182,14 @@ ant.fmt = ""
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(1.3, -0.15)
-ant.p2 = RBA::DPoint::new(1.3, -0.65)
+ant.p1 = RBA::DPoint::new(1.6, 0.25)
+ant.p2 = RBA::DPoint::new(1.6, -0.65)
 ant.style = RBA::Annotation::StyleLine
 ant.fmt = ""
 view.insert_annotation(ant)
 
 ant = RBA::Annotation::new
-ant.p1 = RBA::DPoint::new(1.3, -0.6)
+ant.p1 = RBA::DPoint::new(1.6, -0.6)
 ant.p2 = RBA::DPoint::new(0.4, -0.6)
 ant.style = RBA::Annotation::StyleArrowBoth
 ant.fmt = "  MASK: $D"
@@ -2208,8 +2202,6 @@ view.update_content
 
 view.save_image(fn, screenshot_width, screenshot_height)
 puts "Screenshot written to #{fn}"
-
-end
 
 # -------------------------------------------------------------------
 #  Doc grow sample 12
@@ -2286,7 +2278,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2426,7 +2418,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2579,7 +2571,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2718,7 +2710,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -2852,7 +2844,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3000,7 +2992,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3148,7 +3140,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3296,7 +3288,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3444,7 +3436,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3592,7 +3584,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3740,7 +3732,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -3880,7 +3872,7 @@ depth(1)
 m1 = layer("1/0")
 
 substrate = bulk
-mask(m1).etch(0.3, :taper => 10, :bias => -0.1, :into => substrate)
+mask(m1).etch(0.3, 0.1, :taper => 10, :into => substrate)
 
 # output the material data to the target layout
 output("0/0", substrate)
@@ -3888,7 +3880,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4052,7 +4044,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4224,7 +4216,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4376,7 +4368,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view
@@ -4514,7 +4506,7 @@ END
 
 end
 
-XSectionScriptEnvironment.new.run_script("tmp.xs")
+XS::XSectionScriptEnvironment.new.run_script("tmp.xs")
 File.unlink("tmp.xs")
 
 view = mw.current_view

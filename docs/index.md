@@ -22,17 +22,22 @@ this file here: [cmos.xs](cmos.xs).
 ## Using The Cross Section Module
 
 Start KLayout after you have installed the script. You will find a new entry in the "Tools" menu. 
-Choosing "Tools/XSection Scripts/XSection Script" opens a file browser and you are prompted for the .xs file.
+Choosing "Tools/XSection Scripts/Run Script" opens a file browser and you are prompted for the .xs file.
 
 To create a cross section, draw a ruler into the layout indicating the line along which the 
 cross section is created. Choose "Tools/XSection Scripts/XSection Script" to select 
 the ".xs" file and to generate the cross section in a new layout window. Once you have 
-used a ".xs" file, it is available in the recently used files list below the "XSection Script" 
+used a ".xs" file, it is available in the recently used files list below the "Run Script" 
 menu entry for quick access.
 
-An introduction into writing XS files can be found here: [Writing XS Files - an Introduction](DocIntro). 
+You can draw multiple rulers to recieve different cross sections at different places. There is 
+also a special ruler type called "XSection". If there is at least one such ruler, the cross section script
+will only use these rulers for creating cross sections from. This way you can use normal rulers
+to do measurements, while using the special rulers for doing cross sections.
 
-A function reference is also available here: [XS File Reference](DocReference).
+For an introduction into writing XS files see here: [Writing XS Files - an Introduction](DocIntro). 
+
+A function reference is available here: [XS File Reference](DocReference).
 
 ## Example
 
