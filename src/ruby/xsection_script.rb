@@ -110,7 +110,7 @@ module XS
       menu.insert_separator("tools_menu.xsection_script_submenu.end.end", "xsection_script_mru_group")
   
       @mru_actions = []
-      (1..4).each do |i|
+      (1..10).each do |i|
   
         a = XSectionMRUAction.new do |action|
           run_script(action.script)
