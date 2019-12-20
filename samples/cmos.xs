@@ -58,6 +58,7 @@ nwell = mask(lwn).grow(0.5, -0.05, :mode => :round, :into => pbulk)
 # "bias" will shrink the resulting area.
 mfox = mask(lfox)
 fox1 = mfox.grow(0.2, 0.2, :bias => 0.1, :mode => :round)
+
 fox2 = mfox.grow(0.2, 0.2, :bias => 0.1, :mode => :round, :into => [pbulk, nwell])
 fox = fox1.or(fox2)
 
@@ -88,12 +89,12 @@ nd = diffuse(0.1, -0.05, :into => [nldd, pbulk], :through => gox, :mode => :roun
 etch(0.02, :into => [gox, ox1])
 
 # deposit isolation
-iso = deposit(0.5, 0.5, :mode => :round)
+iso = deposit(0.7, 0.7, :mode => :round)
 output("400/0", iso) # for demonstration
 
 # etch the gate and source/drain contacts
 # "taper" will make the holes conical with a sidewall angle of 5 degree.
-mask(lcg).etch(0.8, :into => iso, :taper => 5)
+mask(lcg).etch(1.0, :into => iso, :taper => 4)
 
 # fill with tungsten to form the plugs
 w = deposit(0.15, 0.15)
@@ -103,7 +104,7 @@ w = deposit(0.15, 0.15)
 # Alternative specifications are: 
 #   :downto => {material(s)}   planarize down to these materials
 #   :to => z                   planarize to the given z position measured from 0 (the initial wafer surface) 
-planarize(:into => [w, iso], :less => 0.45)
+planarize(:into => [w, iso], :less => 0.65)
 
 # m1 isolation and etch, metal deposition and CMP 
 iso2 = deposit(0.2)
@@ -114,18 +115,20 @@ planarize(:into => [alu1], :less => 0.2)
 # finally output all result material.
 # output specification can be scattered throughout the script but it is 
 # easier to read when put at the end.
-output("300/0", nwell)
-output("301/0", fox)
-output("301/1", gox)
-output("302/0", poly)
-output("302/1", silicide)
-output("303/0", pldd)
-output("304/0", nldd)
-output("305/0", ox1)
-output("306/0", pd)
-output("307/0", nd)
-output("308/0", iso)
-output("309/0", w)
-output("310/0", iso2)
-output("311/0", alu1)
+output("nwell (300/0)", nwell)
+output("fox (301/0)", fox)
+output("gox (301/1)", gox)
+output("poly (302/0)", poly)
+output("silicide (302/1)", silicide)
+output("pldd (303/0)", pldd)
+output("nldd (304/0)", nldd)
+output("ox1 (305/0)", ox1)
+output("pd (306/0)", pd)
+output("nd (307/0)", nd)
+output("iso (308/0)", iso)
+output("w (309/0)", w)
+output("iso2 (310/0)", iso2)
+output("alu1 (311/0)", alu1)
+
+layers_file("cmos.lyp")
 
