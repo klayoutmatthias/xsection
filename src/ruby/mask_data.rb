@@ -525,19 +525,34 @@ module XS
     
     # computes the surface edges (the interface between air and some material)
     # "enabled_by" is a material object which needs to touch with the surface
-    # in order to enable it. "pi" is a prebias which is applied to the air and
-    # enabling material to shrink the contours for later application of a full
-    # kernel.
+    # in order to enable it. "mp" are the verticalized mask polygons (vertical bands
+    # where the mask is open)
     def compute_surface_edges(mp, enabled_by)
 
-      # compute the surface edges in me    
-      ap_masked = @ep.safe_boolean_to_polygon(mp, @air_polygons, RBA::EdgeProcessor::mode_and, true, true)
-      me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp)))
-      
-      # consider enabling the surface edges with "into", "on" or "through" ..
+      # compute the surface edges in me
       if enabled_by
+
+        # pre-size the air polygons to achieve a guaranteed overlap with "enabled_by"
+        # (in horizontal direction)
+        # ap_sized = air_polygons.sized_x(delta) - enabled_by
+        ap_sized = @ep.size_to_polygon(@air_polygons, @xs.delta_dbu, 0, 2, true, true)
+        ap_sized = @ep.safe_boolean_to_polygon(ap_sized, enabled_by, RBA::EdgeProcessor::mode_anotb, true, true)
+
+        # when masking by enabled_by, apply an additional vertical sizing to catch vertical deviations
+        # (we do this after the masking so we don't alter the vertical dimensions of the etch)
+        # me = (edges(mp & ap_sized) & ((mp & enabled_by).sized_y(delta))) - edges(mp)
+        ap_masked = @ep.safe_boolean_to_polygon(mp, ap_sized, RBA::EdgeProcessor::mode_and, true, true)
+        me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp)))
+      
         en_masked = @ep.safe_boolean_to_polygon(mp, enabled_by, RBA::EdgeProcessor::mode_and, true, true)
         me &= RBA::Region::new(en_masked).sized(0, @xs.delta_dbu, 2)
+        
+      else
+
+        # me = edges(mp & air_polygons) - edges(mp)
+        ap_masked = @ep.safe_boolean_to_polygon(mp, @air_polygons, RBA::EdgeProcessor::mode_and, true, true)
+        me = ap_masked.empty? ? RBA::Edges::new : (RBA::Edges::new(ap_masked) - (mp.empty? ? RBA::Edges::new : RBA::Edges::new(mp)))
+
       end
       
       me
