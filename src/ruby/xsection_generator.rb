@@ -554,7 +554,7 @@ module XS
     def finish_output_view
     
       # Show all layers which were created in between
-      RBA::Application.instance.main_window.cm_lv_add_missing 
+      @target_view.add_missing_layers
       if @lyp_file
         @target_view.load_layer_props(@lyp_file)
       end
