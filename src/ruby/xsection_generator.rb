@@ -56,7 +56,7 @@ module XS
     # TODO: for debugging only
     def output_raw(layer_spec, d)
   
-      ls = string_to_layerinfo(layer_spec)
+      ls = XS.string_to_layerinfo(layer_spec)
       li = @target_layout.layer(ls)
       shapes = @target_layout.cell(@target_cell).shapes(li)
       shapes.insert(d)
