@@ -197,7 +197,7 @@ module XS
         if p1 && p2
         
           # take the given line
-          pts << [ p1, p2 ]
+          pts << [[ p1, p2 ]]
           
         else
   
