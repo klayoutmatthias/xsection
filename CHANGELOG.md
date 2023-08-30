@@ -1,4 +1,14 @@
 
+# Version 1.5 - 2023-08-30
+
+* Enabling multi-rulers in 0.28.x KLayout version:
+  KLayout 0.28.x features multi-rules which more than two points.
+  The cross section script will ignore every second segment and stitch
+  the other segments into a linear view if it encounters such a case.
+  This means, you can create cross sections that are made from multiple
+  parts by connecting the active parts with inactive segments of a
+  multi-ruler.
+
 # Version 1.4 - 2019-12-20
 
 * Modification of the "taper" behavior to match with the old SourceForge
