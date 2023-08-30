@@ -24,7 +24,7 @@ class TestLayoutData < Test::Unit::TestCase
     xs = XS::XSectionGenerator::new("ut")
 
     ld = XS::LayoutData::new([ RBA::Polygon::new(RBA::Box::new(0, 1000, 2000, 3000)) ], xs)
-    assert_equal(ld.data.to_s, "[(0,1000;0,3000;2000,3000;2000,1000)]")
+    assert_equal(ld.data.collect { |p| p.to_s }.join("/"), "(0,1000;0,3000;2000,3000;2000,1000)")
 
   end
 
@@ -34,13 +34,13 @@ class TestLayoutData < Test::Unit::TestCase
 
     ld = XS::LayoutData::new([ RBA::Polygon::new(RBA::Box::new(0, 1000, 2000, 3000)) ], xs)
     ld2 = ld.sized(0.5)
-    assert_equal(ld2.data.to_s, "[(-500,500;-500,3500;2500,3500;2500,500)]")
+    assert_equal(ld2.data.collect { |p| p.to_s }.join("/"), "(-500,500;-500,3500;2500,3500;2500,500)")
 
     ld2.size(1.0)
-    assert_equal(ld2.data.to_s, "[(-1500,-500;-1500,4500;3500,4500;3500,-500)]")
+    assert_equal(ld2.data.collect { |p| p.to_s }.join("/"), "(-1500,-500;-1500,4500;3500,4500;3500,-500)")
 
     ld2 = ld.sized(0.5, 1.0)
-    assert_equal(ld2.data.to_s, "[(-500,0;-500,4000;2500,4000;2500,0)]")
+    assert_equal(ld2.data.collect { |p| p.to_s }.join("/"), "(-500,0;-500,4000;2500,4000;2500,0)")
 
   end
 
@@ -52,8 +52,8 @@ class TestLayoutData < Test::Unit::TestCase
 
     ld2 = ld.dup
     ld2.size(-0.1)
-    assert_equal(ld.data.to_s, "[(0,1000;0,3000;2000,3000;2000,1000)]")
-    assert_equal(ld2.data.to_s, "[(100,1100;100,2900;1900,2900;1900,1100)]")
+    assert_equal(ld.data.collect { |p| p.to_s }.join("/"), "(0,1000;0,3000;2000,3000;2000,1000)")
+    assert_equal(ld2.data.collect { |p| p.to_s }.join("/"), "(100,1100;100,2900;1900,2900;1900,1100)")
 
   end
 
@@ -64,14 +64,14 @@ class TestLayoutData < Test::Unit::TestCase
     ld = XS::LayoutData::new([ RBA::Polygon::new(RBA::Box::new(0, 1000, 2000, 3000)) ], xs)
 
     ldother = XS::LayoutData::new([ RBA::Polygon::new(RBA::Box::new(1000, 0, 3000, 2000)) ], xs)
-    assert_equal(ld.and(ldother).data.to_s, "[(1000,1000;1000,2000;2000,2000;2000,1000)]")
-    assert_equal(ld.andp(ldother.data).data.to_s, "[(1000,1000;1000,2000;2000,2000;2000,1000)]")
-    assert_equal(ld.or(ldother).data.to_s, "[(1000,0;1000,1000;0,1000;0,3000;2000,3000;2000,2000;3000,2000;3000,0)]")
-    assert_equal(ld.orp(ldother.data).data.to_s, "[(1000,0;1000,1000;0,1000;0,3000;2000,3000;2000,2000;3000,2000;3000,0)]")
-    assert_equal(ld.xor(ldother).data.to_s, "[(1000,0;1000,1000;2000,1000;2000,2000;3000,2000;3000,0), (0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)]")
-    assert_equal(ld.xorp(ldother.data).data.to_s, "[(1000,0;1000,1000;2000,1000;2000,2000;3000,2000;3000,0), (0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)]")
-    assert_equal(ld.not(ldother).data.to_s, "[(0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)]")
-    assert_equal(ld.notp(ldother.data).data.to_s, "[(0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)]")
+    assert_equal(ld.and(ldother).data.collect { |p| p.to_s }.join("/"), "(1000,1000;1000,2000;2000,2000;2000,1000)")
+    assert_equal(ld.andp(ldother.data).data.collect { |p| p.to_s }.join("/"), "(1000,1000;1000,2000;2000,2000;2000,1000)")
+    assert_equal(ld.or(ldother).data.collect { |p| p.to_s }.join("/"), "(1000,0;1000,1000;0,1000;0,3000;2000,3000;2000,2000;3000,2000;3000,0)")
+    assert_equal(ld.orp(ldother.data).data.collect { |p| p.to_s }.join("/"), "(1000,0;1000,1000;0,1000;0,3000;2000,3000;2000,2000;3000,2000;3000,0)")
+    assert_equal(ld.xor(ldother).data.collect { |p| p.to_s }.join("/"), "(1000,0;1000,1000;2000,1000;2000,2000;3000,2000;3000,0)/(0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)")
+    assert_equal(ld.xorp(ldother.data).data.collect { |p| p.to_s }.join("/"), "(1000,0;1000,1000;2000,1000;2000,2000;3000,2000;3000,0)/(0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)")
+    assert_equal(ld.not(ldother).data.collect { |p| p.to_s }.join("/"), "(0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)")
+    assert_equal(ld.notp(ldother.data).data.collect { |p| p.to_s }.join("/"), "(0,1000;0,3000;2000,3000;2000,2000;1000,2000;1000,1000)")
 
   end
 
@@ -82,7 +82,7 @@ class TestLayoutData < Test::Unit::TestCase
     ld = XS::LayoutData::new([ RBA::Polygon::new(RBA::Box::new(0, 1000, 2000, 3000)) ], xs)
 
     ld.transform(RBA::Trans::new(100, 200))
-    assert_equal(ld.data.to_s, "[(100,1200;100,3200;2100,3200;2100,1200)]")
+    assert_equal(ld.data.collect { |p| p.to_s }.join("/"), "(100,1200;100,3200;2100,3200;2100,1200)")
 
   end
 
@@ -91,7 +91,7 @@ class TestLayoutData < Test::Unit::TestCase
     xs = XS::XSectionGenerator::new("ut")
 
     ld = XS::LayoutData::new([ RBA::Polygon::new(RBA::Box::new(0, 1000, 2000, 3000)) ], xs)
-    assert_equal(ld.data.to_s, "[(0,1000;0,3000;2000,3000;2000,1000)]")
+    assert_equal(ld.data.collect { |p| p.to_s }.join("/"), "(0,1000;0,3000;2000,3000;2000,1000)")
 
     ld.data = RBA::Box::new(0, 100, 200, 300)
     assert_equal(ld.data.to_s, "(0,100;200,300)")

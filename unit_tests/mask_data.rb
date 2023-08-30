@@ -16,6 +16,12 @@ require "test/unit"
 
 require File.join(File.dirname(__FILE__), "..", "src", "ruby", "xsection.rb")
 
+def es_to_s(es)
+  es.collect { |ee|
+    ee.collect { |e| e.to_s }.join("/")
+  }.join("//")
+end
+
 class TestMaskData < Test::Unit::TestCase
  
   def test_stitch_edges
@@ -27,16 +33,16 @@ class TestMaskData < Test::Unit::TestCase
     e5 = RBA::Edge::new(200, 500, 0, 600)
 
     # boundary cases
-    assert_equal(XS::MaskData.stitch_edges([ ]).to_s, "[]")
-    assert_equal(XS::MaskData.stitch_edges([ RBA::Edge::new ]).to_s, "[[(0,0;0,0)]]")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ ])), "")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ RBA::Edge::new ])), "(0,0;0,0)")
 
-    assert_equal(XS::MaskData.stitch_edges([ e1 ]).to_s, "[[(0,100;0,200)]]")
-    assert_equal(XS::MaskData.stitch_edges([ e1, e2 ]).to_s, "[[(0,100;0,200), (0,200;200,500)]]")
-    assert_equal(XS::MaskData.stitch_edges([ e2, e1 ]).to_s, "[[(0,100;0,200), (0,200;200,500)]]")
-    assert_equal(XS::MaskData.stitch_edges([ e5, e2, e1 ]).to_s, "[[(0,100;0,200), (0,200;200,500), (200,500;0,600)]]")
-    assert_equal(XS::MaskData.stitch_edges([ e2, e3, e4, e1 ]).to_s, "[[(0,0;100,200), (100,200;500,1000)], [(0,100;0,200), (0,200;200,500)]]")
-    assert_equal(XS::MaskData.stitch_edges([ e3, e2, e4, e1 ]).to_s, "[[(0,0;100,200), (100,200;500,1000)], [(0,100;0,200), (0,200;200,500)]]")
-    assert_equal(XS::MaskData.stitch_edges([ e5, e3, e2, e4, e1 ]).to_s, "[[(0,0;100,200), (100,200;500,1000)], [(0,100;0,200), (0,200;200,500), (200,500;0,600)]]")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e1 ])), "(0,100;0,200)")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e1, e2 ])), "(0,100;0,200)/(0,200;200,500)")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e2, e1 ])), "(0,100;0,200)/(0,200;200,500)")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e5, e2, e1 ])), "(0,100;0,200)/(0,200;200,500)/(200,500;0,600)")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e2, e3, e4, e1 ])), "(0,0;100,200)/(100,200;500,1000)//(0,100;0,200)/(0,200;200,500)")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e3, e2, e4, e1 ])), "(0,0;100,200)/(100,200;500,1000)//(0,100;0,200)/(0,200;200,500)")
+    assert_equal(es_to_s(XS::MaskData.stitch_edges([ e5, e3, e2, e4, e1 ])), "(0,0;100,200)/(100,200;500,1000)//(0,100;0,200)/(0,200;200,500)/(200,500;0,600)")
 
   end
 
@@ -55,7 +61,7 @@ class TestMaskData < Test::Unit::TestCase
     dead = XS::MaskData.insert_dead_intervals(me, 100)
 
     assert_equal(dead.inspect, "[[300, 500]]")
-    assert_equal(me.to_s, "[(0,100;100,200), (100,200;200,200), (200,200;200,300), (200,300;300,400), (300,400;500,400), (500,400;500,300), (500,300;700,200)]")
+    assert_equal(me.collect { |e| e.to_s }.join("/"), "(0,100;100,200)/(100,200;200,200)/(200,200;200,300)/(200,300;300,400)/(300,400;500,400)/(500,400;500,300)/(500,300;700,200)")
 
     # sequence is automatically ordered from left to right
     me = me_saved.reverse
@@ -65,7 +71,7 @@ class TestMaskData < Test::Unit::TestCase
     dead = XS::MaskData.insert_dead_intervals(me, 100)
 
     assert_equal(dead.inspect, "[[300, 500]]")
-    assert_equal(me.to_s, "[(0,100;100,200), (100,200;200,200), (200,200;200,300), (200,300;300,400), (300,400;500,400), (500,400;500,300), (500,300;700,200)]")
+    assert_equal(me.collect { |e| e.to_s }.join("/"), "(0,100;100,200)/(100,200;200,200)/(200,200;200,300)/(200,300;300,400)/(300,400;500,400)/(500,400;500,300)/(500,300;700,200)")
 
   end
 
@@ -82,7 +88,7 @@ class TestMaskData < Test::Unit::TestCase
     dead = XS::MaskData.insert_dead_intervals(me, 500)
 
     assert_equal(dead.inspect, "[[250, 1250]]")
-    assert_equal(me.to_s, "[(0,100;100,200), (100,200;200,200), (200,200;200,400), (200,400;1300,400), (1300,400;1500,300), (1500,300;1500,200)]")
+    assert_equal(me.collect { |e| e.to_s }.join("/"), "(0,100;100,200)/(100,200;200,200)/(200,200;200,400)/(200,400;1300,400)/(1300,400;1500,300)/(1500,300;1500,200)")
 
   end
 
@@ -102,7 +108,7 @@ class TestMaskData < Test::Unit::TestCase
     dead = XS::MaskData.insert_dead_intervals(me, 100)
 
     assert_equal(dead.inspect, "[[300, 500], [700, 900], [1050, 1250]]")
-    assert_equal(me.to_s, "[(0,100;200,300), (200,300;300,400), (300,400;500,400), (500,400;700,300), (700,300;700,200), (700,200;900,200), (900,200;1000,300), (1000,300;1300,300), (1300,300;1600,200)]")
+    assert_equal(me.collect { |e| e.to_s }.join("/"), "(0,100;200,300)/(200,300;300,400)/(300,400;500,400)/(500,400;700,300)/(700,300;700,200)/(700,200;900,200)/(900,200;1000,300)/(1000,300;1300,300)/(1300,300;1600,200)")
 
   end
 
