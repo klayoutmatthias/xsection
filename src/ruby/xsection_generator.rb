@@ -36,7 +36,7 @@ module XS
   class XSectionGenerator
   
     # Constructor
-    def initialize(file_path, batch)
+    def initialize(file_path, batch = true)
   
       @file_path = file_path
       @lyp_file = nil
@@ -49,7 +49,11 @@ module XS
   
     def layer(layer_spec)
       ld = LayoutData.new([], self)
-      ld.load(@layout, @cell, @line.bbox.enlarge(RBA::Point.new(@extend, @extend)), layer_spec)
+      bbox = RBA::Box::new
+      @lines.each do |line|
+        bbox += RBA::Box::new(line.p1, line.p2)
+      end
+      ld.load(@layout, @cell, bbox.enlarged(@extend, @extend), layer_spec)
       return ld
     end
   
@@ -123,7 +127,7 @@ module XS
     end
   
     def all
-      return xpoints_to_mask([[ -@extend, 1 ], [ @line.length + @extend, -1 ]])
+      return xpoints_to_mask([[ -@extend, 1 ], [ @line_length + @extend, -1 ]])
     end
   
     def diffuse(*args)
@@ -145,33 +149,42 @@ module XS
     def mask(layer_data)
   
       crossing_points = []
+
+      l = 0
+
+      @lines.each_with_index do |line, line_index|
   
-      layer_data.data.each do |polygon|
-  
-        polygon.each_edge do |edge_dbu|
-        
-          if @line.crossed_by?(edge_dbu) && (@line.side_of(edge_dbu.p1) > 0 || @line.side_of(edge_dbu.p2) > 0)
-  
-            # compute the crossing point of "edge" and "line" in database units
-            # confine the point to the length of the line
-            z = (edge_dbu.dx.to_f * (edge_dbu.p1.y.to_f - @line.p1.y.to_f) - edge_dbu.dy.to_f * (edge_dbu.p1.x.to_f - @line.p1.x.to_f)) /
-                (edge_dbu.dx.to_f * (@line.p2.y.to_f - @line.p1.y.to_f) - edge_dbu.dy.to_f * (@line.p2.x.to_f - @line.p1.x.to_f))
-            z = (z * @line.length + 0.5).floor
-            if z < -@extend
-              z = -@extend
-            elsif z > @line.length + @extend
-              z = @line.length + @extend
+        layer_data.data.each do |polygon|
+    
+          polygon.each_edge do |edge_dbu|
+          
+            if line.crossed_by?(edge_dbu) && (line.side_of(edge_dbu.p1) > 0 || line.side_of(edge_dbu.p2) > 0)
+    
+              # compute the crossing point of "edge" and "line" in database units
+              # confine the point to the length of the line
+
+              z = (edge_dbu.dx.to_f * (edge_dbu.p1.y.to_f - line.p1.y.to_f) - edge_dbu.dy.to_f * (edge_dbu.p1.x.to_f - line.p1.x.to_f)) /
+                  (edge_dbu.dx.to_f * (line.p2.y.to_f - line.p1.y.to_f) - edge_dbu.dy.to_f * (line.p2.x.to_f - line.p1.x.to_f))
+              z = (z * line.length + 0.5).floor
+
+              max_z = line_index > 0 ? 0 : -@extend
+              min_z = (line_index + 1 < @lines.size ? 0 : @extend) + line.length
+              z = [ [ z, max_z ].max, min_z ].min
+              z += l
+    
+              s = ((edge_dbu.dy * line.dx - edge_dbu.dx * line.dy) <=> 0)
+    
+              # store that along with the orientation of the edge (+1: "enter geometry", -1: "leave geometry")
+              crossing_points.push([ z, s ])
+    
             end
-  
-            s = ((edge_dbu.dy * @line.dx - edge_dbu.dx * @line.dy) <=> 0)
-  
-            # store that along with the orientation of the edge (+1: "enter geometry", -1: "leave geometry")
-            crossing_points.push([ z, s ])
-  
+    
           end
-  
+    
         end
-  
+
+        l += line.length
+
       end
   
       # compress the crossing points by collecting all of those which cut the measure line at the
@@ -317,9 +330,9 @@ module XS
         less ||= 0
         
         if @flipped
-          removed_box = RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line.length + @extend, to + less)
+          removed_box = RBA::Box.new(-@extend, -self.depth_dbu - self.below_dbu, @line_length + @extend, to + less)
         else
-          removed_box = RBA::Box.new(-@extend, to - less, @line.length + @extend, self.height_dbu)
+          removed_box = RBA::Box.new(-@extend, to - less, @line_length + @extend, self.height_dbu)
         end
         
         rem = LayoutData::new([], self)
@@ -411,25 +424,16 @@ module XS
     end
   
     def width_dbu
-      @line.length
+      @line_length
     end
   
     def background
-      x1 = @line.p1.x
-      y1 = @line.p1.y
-      x2 = @line.p2.x
-      y2 = @line.p2.y
-      if x2 < x1
-        (x1, x2) = [x2, x1]
+      box = RBA::Box::new
+      @lines.each do |line|
+        box += RBA::Box::new(line.p1, line.p2)
       end
-      if y2 < y1
-        (y1, y2) = [y2, y1]
-      end
-      x1 -= @extend
-      y1 -= @extend
-      x2 += @extend
-      y2 += @extend
-      RBA::Box.new(RBA::Point.new(x1 - @delta * 5, y1 - @delta * 5), RBA::Point.new(x2 + @delta * 5, y2 + @delta * 5))
+      box.enlarge(@extend + @delta * 5)
+      return box
     end
   
     def air
@@ -461,7 +465,8 @@ module XS
       @depth = (@depth * scale + 0.5).floor.to_i
       @below = (@below * scale + 0.5).floor.to_i
       
-      @line = @line * scale
+      @line_length *= scale
+      @lines = @lines.each.collect { |line| line * scale }
       @target_layout.dbu = @dbu
 
       update_basic_regions
@@ -474,12 +479,17 @@ module XS
       @lyp_file = lyp_file
     end
   
-    # The basic generation method
+    # The basic generation method (single segment)
     def run(p1, p2, cv)
+      run_multi([ p1, p2 ])
+    end
   
+    # The basic generation method (multiple segments)
+    def run_multi(pp, cv)
+
       @target_view = nil
   
-      setup(p1, p2, cv)
+      setup(pp, cv)
   
       update_basic_regions
   
@@ -499,7 +509,7 @@ module XS
   
     end
   
-    def setup(p1, p2, cv)
+    def setup(pts, cv)
   
       # locate the layout and the (single) ruler
       @cv = cv
@@ -508,9 +518,15 @@ module XS
       @cell = cv.cell_index
   
       # get the start and end points in database units and micron
-      p1_dbu = RBA::Point::from_dpoint(p1 * (1.0 / @dbu))
-      p2_dbu = RBA::Point::from_dpoint(p2 * (1.0 / @dbu))
-      @line = RBA::Edge.new(p1_dbu, p2_dbu)
+      @lines = []
+      @line_length = 0
+      pts.each do |p1,p2|
+        p1_dbu = RBA::Point::from_dpoint(p1 * (1.0 / @dbu))
+        p2_dbu = RBA::Point::from_dpoint(p2 * (1.0 / @dbu))
+        line = RBA::Edge.new(p1_dbu, p2_dbu)
+        @lines << line
+        @line_length += line.length
+      end
   
       # create a new layout for the output
       prepare_output_view
@@ -529,11 +545,11 @@ module XS
   private
   
     def update_basic_regions
-      @area = RBA::Box.new(-@extend, -@depth - @below, @line.length + @extend, @height)
-      @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, 0, @line.length + @extend, @height))], self)
-      @air_below = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth - @below, @line.length + @extend, -@depth))], self)
-      @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line.length + @extend, 0))], self)
-      @roi = RBA::Box.new(0, -@depth - @below, @line.length, @height)
+      @area = RBA::Box.new(-@extend, -@depth - @below, @line_length + @extend, @height)
+      @air = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, 0, @line_length + @extend, @height))], self)
+      @air_below = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth - @below, @line_length + @extend, -@depth))], self)
+      @bulk = MaterialData.new([RBA::Polygon.new(RBA::Box.new(-@extend, -@depth, @line_length + @extend, 0))], self)
+      @roi = RBA::Box.new(0, -@depth - @below, @line_length, @height)
     end
     
     def prepare_output_view

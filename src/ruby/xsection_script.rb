@@ -80,7 +80,7 @@ module XS
       end
   
       @active_tech = RBA::Action.new
-      @active_tech.title = "XSection: Active Technolgy"
+      @active_tech.title = "XSection: Active Technology"
       @active_tech.shortcut = "Ctrl+Shift+X"
       @active_tech.on_triggered do
       
@@ -218,8 +218,21 @@ module XS
               xs_rulers << a
             end
           end
-          
-          pts = xs_rulers.collect { |a| [ a.p1, a.p2 ] }
+
+          pts = xs_rulers.collect do |a| 
+            pa = []
+            if a.respond_to?(:points)
+              pp = a.points
+              n = pp.size / 2
+              n.times.each do |i|
+                pa << [ pp[i * 2], pp[i * 2 + 1] ]
+              end
+            else
+              pa = [ a.p1, a.p2 ]
+            end
+            pa
+          end
+
           if pts.size == 0
             raise("No (valid) ruler present for the cross section line")
           end
@@ -229,7 +242,7 @@ module XS
         new_view = nil
         
         pts.each do |pp|
-          new_view = XSectionGenerator.new(fn, batch).run(*pp, cv)
+          new_view = XSectionGenerator.new(fn, batch).run_multi(pp, cv)
         end
         
         new_view
