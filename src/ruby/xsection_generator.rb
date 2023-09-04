@@ -46,14 +46,20 @@ module XS
       @batch = batch
   
     end
-  
-    def layer(layer_spec)
-      ld = LayoutData.new([], self)
+    
+    def base_bbox
       bbox = RBA::Box::new
       @lines.each do |line|
         bbox += RBA::Box::new(line.p1, line.p2)
       end
-      ld.load(@layout, @cell, bbox.enlarged(@extend, @extend), layer_spec)
+      return bbox.enlarged(@extend, @extend)
+    end
+  
+    def layer(layer_spec, layout = nil, cell = nil)
+      ld = LayoutData.new([], self)
+      layout ||= @layout
+      cell ||= @cell
+      ld.load(@layout, @cell, base_bbox(), layer_spec)
       return ld
     end
   

@@ -8,6 +8,7 @@
  <doc/>
  <autorun>true</autorun>
  <autorun-early>false</autorun-early>
+ <priority>0</priority>
  <shortcut/>
  <show-in-menu>false</show-in-menu>
  <group-name/>
@@ -31,7 +32,7 @@ require_relative("../ruby/xsection")
 module XS
 
   # UPDATE THE VERSION NUMBER ON EACH RELEASE HERE
-  VERSION = "1.5"
+  VERSION = "1.6"
 
   @xsection_processing_environment = XSectionScriptEnvironment.new
   
