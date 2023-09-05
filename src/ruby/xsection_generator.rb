@@ -52,7 +52,7 @@ module XS
       @lines.each do |line|
         bbox += RBA::Box::new(line.p1, line.p2)
       end
-      return bbox.enlarged(@extend, @extend)
+      return bbox.enlarged(RBA::Vector::new(@extend, @extend))
     end
   
     def layer(layer_spec, layout = nil, cell = nil)
