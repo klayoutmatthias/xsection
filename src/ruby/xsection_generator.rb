@@ -438,7 +438,8 @@ module XS
       @lines.each do |line|
         box += RBA::Box::new(line.p1, line.p2)
       end
-      box.enlarge(@extend + @delta * 5)
+      enl = @extend + @delta * 5
+      box.enlarge(RBA::Vector::new(enl, enl))
       return box
     end
   
