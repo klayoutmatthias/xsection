@@ -197,7 +197,7 @@ module XS
         if p1 && p2
         
           # take the given line
-          pts << [[ p1, p2 ]]
+          pts << [[[ p1, p2 ]]]
           
         else
   
@@ -228,7 +228,7 @@ module XS
                 pa << [ pp[i * 2], pp[i * 2 + 1] ]
               end
             else
-              pa = [ a.p1, a.p2 ]
+              pa << [ a.p1, a.p2 ]
             end
             pa
           end
