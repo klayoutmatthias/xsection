@@ -59,7 +59,7 @@ module XS
       ld = LayoutData.new([], self)
       layout ||= @layout
       cell ||= @cell
-      ld.load(@layout, @cell, base_bbox(), layer_spec)
+      ld.load(layout, cell, base_bbox(), layer_spec)
       return ld
     end
   

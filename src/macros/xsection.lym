@@ -32,7 +32,7 @@ require_relative("../ruby/xsection")
 module XS
 
   # UPDATE THE VERSION NUMBER ON EACH RELEASE HERE
-  VERSION = "1.6"
+  VERSION = "1.7"
 
   @xsection_processing_environment = XSectionScriptEnvironment.new
   

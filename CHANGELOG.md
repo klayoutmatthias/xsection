@@ -1,4 +1,14 @@
 
+# Version 1.7 - 2023-09-15
+
+* Bugfix for XS::layer
+
+# Version 1.6 - 2023-09-05
+
+* Generalizing some useful methods (XS::base_box, XS::layer)
+* Ruby 2.x compatibility enhanced
+* Compatibility with older KLayout versions
+
 # Version 1.5 - 2023-08-30
 
 * Enabling multi-rulers in 0.28.x KLayout version:
