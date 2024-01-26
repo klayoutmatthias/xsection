@@ -318,11 +318,9 @@ module XS
       end
   
       d &= RBA::Region::new(into_data)
-      
-      poly = []
-      d.each { |p| poly << p }
-      return poly
-  
+
+      # Keep polygons touching the surface
+      return d.interacting(me).each.collect { |p| p }
     end
 
     # Computes the convolution of the edge sequence with the kernel 
