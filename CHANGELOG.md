@@ -1,4 +1,12 @@
 
+# Version 1.9 - 2024-05-28
+
+* Bugfix issue #34 ("XSection: Active Technology" not working in Windows)
+
+# Version 1.8 - 2024-04-25
+
+* Bugfix issue #29 (Issues with batch mode of XSection)
+
 # Version 1.7 - 2023-09-15
 
 * Bugfix for XS::layer

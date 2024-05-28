@@ -92,7 +92,8 @@ module XS
           end
           tech_name = view.active_cellview.technology
           tech = RBA::Technology.technology_by_name(tech_name)
-          xsect_dir = File.join(tech.base_path, 'xsect')
+          # NOTE: Dir.glob does not like backslashes (important on Windows) - issue #34
+          xsect_dir = File.join(tech.base_path.gsub('\\', '/'), 'xsect')
           unless File.exist?(xsect_dir)
             raise "No Xsection directory present for #{tech_name}"
           end
