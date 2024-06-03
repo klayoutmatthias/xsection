@@ -488,7 +488,7 @@ module XS
   
     # The basic generation method (single segment)
     def run(p1, p2, cv)
-      run_multi([ p1, p2 ])
+      run_multi([[ p1, p2 ]], cv)
     end
   
     # The basic generation method (multiple segments)

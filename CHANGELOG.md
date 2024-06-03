@@ -1,4 +1,8 @@
 
+# Version 1.10 - 2024-06-03
+
+* Bugfix issue #35 (XSectionGenerator::run not working)
+
 # Version 1.9 - 2024-05-28
 
 * Bugfix issue #34 ("XSection: Active Technology" not working in Windows)

@@ -1,1 +1,4 @@
 tests/run_dir
+.*.swp
+.*.swo
+klayout_crash.log
